@@ -1,0 +1,23 @@
+{% extends "store/base.html" %}
+{% block title %}Admin login — BasketBee{% endblock %}
+{% block content %}
+<section class="section" style="max-width:420px;">
+  <div class="form-card">
+    <h1>Admin login</h1>
+    <p class="subtitle">Sign in to add products, manage stock and view orders.</p>
+
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      {% endfor %}
+      {% if form.non_field_errors %}<ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      <button type="submit" class="btn btn--primary">Sign in</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

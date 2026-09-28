@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-head">
+    <h1>My profile</h1>
+    <a href="{% url 'password_change' %}">Change password</a>
+</div>
+<div class="two-col">
+    <section class="card">
+        <h2>Your details</h2>
+        <form method="post" class="form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="button">Save profile</button>
+        </form>
+    </section>
+    <section class="card">
+        <div class="section-heading">
+            <h2>Addresses</h2>
+            <a class="outline" href="{% url 'address_add' %}">Add</a>
+        </div>
+        {% for a in addresses %}
+            <div class="address">
+                <b>{{ a.full_name }} {% if a.is_default %}<em>Default</em>{% endif %}</b>
+                <p>{{ a.house }}, {{ a.street }}, {{ a.area }}, {{ a.city }}, {{ a.state }} {{ a.pin_code }}</p>
+                <a href="{% url 'address_edit' a.id %}">Edit</a>
+                <form method="post" action="{% url 'address_delete' a.id %}" class="inline">
+                    {% csrf_token %}
+                    <button class="link danger">Delete</button>
+                </form>
+            </div>
+        {% empty %}
+            <p>No saved addresses yet.</p>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

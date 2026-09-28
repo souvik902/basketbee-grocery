@@ -1,0 +1,23 @@
+{% extends "store/base.html" %}
+{% block title %}Add category — BasketBee{% endblock %}
+{% block content %}
+<section class="section" style="max-width:460px;">
+  <div class="form-card">
+    <h1>Add a category</h1>
+    <p class="subtitle">Categories show up as chips on the storefront.</p>
+
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<p class="helptext">{{ field.help_text }}</p>{% endif %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn--primary">Save category</button>
+    </form>
+    <p style="margin-top:16px;"><a href="{% url 'store:dashboard' %}">← Back to dashboard</a></p>
+  </div>
+</section>
+{% endblock %}

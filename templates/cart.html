@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-head">
+    <h1>Your basket</h1>
+</div>
+{% if lines %}
+<div class="two-col">
+    <section class="card">
+        {% for line in lines %}
+        <div class="cart-item">
+            <div>
+                <h3>{{ line.product.name }}</h3>
+                <small>{{ line.product.unit }} · ₹{{ line.product.selling_price }} each</small>
+            </div>
+            <b>₹{{ line.total }}</b>
+            <div class="quantity">
+                <form method="post" action="{% url 'update_cart' line.product.id 'minus' %}">
+                    {% csrf_token %}
+                    <button>−</button>
+                </form>
+                <span>{{ line.quantity }}</span>
+                <form method="post" action="{% url 'update_cart' line.product.id 'plus' %}">
+                    {% csrf_token %}
+                    <button>+</button>
+                </form>
+                <form method="post" action="{% url 'update_cart' line.product.id 'remove' %}">
+                    {% csrf_token %}
+                    <button class="link danger">Remove</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </section>
+    <aside class="card summary">
+        <h2>Bill details</h2>
+        <p>Subtotal <b>₹{{ subtotal }}</b></p>
+        <p>Savings <b>−₹{{ saved }}</b></p>
+        <p>Delivery <b>₹{{ delivery }}</b></p>
+        <hr>
+        <h2>Total <b>₹{{ total }}</b></h2>
+        <a class="button" href="{% url 'checkout' %}">Checkout</a>
+    </aside>
+</div>
+{% else %}
+<div class="empty">
+    <h2>Your basket is waiting</h2>
+    <a class="button" href="{% url 'products' %}">Shop groceries</a>
+</div>
+{% endif %}
+{% endblock %}

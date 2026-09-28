@@ -1,0 +1,70 @@
+{% extends "store/base.html" %}
+{% block title %}Your basket — BasketBee{% endblock %}
+{% block content %}
+<section class="section" style="max-width:680px;">
+  <div class="section__head"><h2>Your basket</h2></div>
+
+  {% if cart %}
+    {% for item in cart %}
+    <div class="cart-row" data-product-id="{{ item.product.id }}">
+      <div class="cart-row__image">
+        {% if item.product.image %}<img src="{{ item.product.image.url }}" alt="">{% else %}🛍️{% endif %}
+      </div>
+      <div class="cart-row__info">
+        <h3>{{ item.product.name }}</h3>
+        <span>{{ item.product.unit_label }} · ₹{{ item.product.price }} each</span>
+      </div>
+      <div class="qty-stepper">
+        <button class="qty-minus">−</button>
+        <span class="qty-value">{{ item.quantity }}</span>
+        <button class="qty-plus">+</button>
+      </div>
+      <strong class="row-subtotal">₹{{ item.subtotal }}</strong>
+    </div>
+    {% endfor %}
+
+    <div class="cart-summary">
+      <div class="cart-summary__row"><span>Items total</span><span id="cart-items-total">₹{{ cart_total }}</span></div>
+      <div class="cart-summary__row"><span>Delivery fee</span><span>Free</span></div>
+      <div class="cart-summary__row total"><span>To pay</span><span id="cart-grand-total">₹{{ cart_total }}</span></div>
+      <a class="btn btn--primary" style="margin-top:16px; display:block;" href="{% url 'store:checkout' %}">Proceed to checkout</a>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>Your basket is empty. <a href="{% url 'store:home' %}">Start shopping →</a></p>
+    </div>
+  {% endif %}
+</section>
+
+<script>
+document.querySelectorAll('.cart-row').forEach(row => {
+  const pid = row.dataset.productId;
+  const setUrl = `/cart/set/${pid}/`;
+  const qtyEl = row.querySelector('.qty-value');
+  const subtotalEl = row.querySelector('.row-subtotal');
+
+  function refreshTotals(data) {
+    document.getElementById('cart-items-total').textContent = `₹${data.cart_total}`;
+    document.getElementById('cart-grand-total').textContent = `₹${data.cart_total}`;
+    basketbeeUpdateCartBadge(data.cart_count);
+    if (data.cart_count === 0) { window.location.reload(); }
+  }
+
+  function changeQty(delta) {
+    let qty = parseInt(qtyEl.textContent, 10) + delta;
+    if (qty < 0) qty = 0;
+    fetch(setUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': basketbeeCsrfToken() },
+      body: JSON.stringify({ quantity: qty }),
+    }).then(r => r.json()).then(data => {
+      qtyEl.textContent = qty;
+      refreshTotals(data);
+    });
+  }
+
+  row.querySelector('.qty-plus').addEventListener('click', () => changeQty(1));
+  row.querySelector('.qty-minus').addEventListener('click', () => changeQty(-1));
+});
+</script>
+{% endblock %}

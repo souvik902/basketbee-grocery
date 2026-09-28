@@ -1,0 +1,79 @@
+{% extends "admin/base.html" %}
+
+{% load static %}
+
+{% block title %}
+BasketBee Control Room
+{% endblock %}
+
+{% block branding %}
+<div class="basketbee-brand">
+    🛒 BasketBee
+    <span>Control Room</span>
+</div>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+
+<style>
+    :root {
+        --primary: #198754;
+        --dark: #12372a;
+        --yellow: #f6b73c;
+    }
+
+    body {
+        background: #f5f8f5 !important;
+    }
+
+    #header {
+        background: var(--dark) !important;
+        padding: 12px 25px !important;
+    }
+
+    .basketbee-brand {
+        color: white;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .basketbee-brand span {
+        font-size: 14px;
+        font-weight: 400;
+        margin-left: 8px;
+        opacity: .8;
+    }
+
+    .module {
+        border-radius: 12px !important;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,.06);
+        border: 1px solid #dce7df !important;
+    }
+
+    .module caption {
+        background: var(--primary) !important;
+    }
+
+    .module tr:hover {
+        background: #f1f8f3 !important;
+    }
+
+    a {
+        color: var(--primary) !important;
+    }
+
+    .button,
+    input[type="submit"] {
+        background: var(--primary) !important;
+        border-radius: 7px !important;
+    }
+
+    .button:hover,
+    input[type="submit"]:hover {
+        background: #146c43 !important;
+    }
+</style>
+
+{% endblock %}

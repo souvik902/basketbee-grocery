@@ -1,0 +1,322 @@
+{% extends "store/base.html" %}
+
+{% block content %}
+<style>
+    .checkout-wrapper{max-width:1100px;margin:40px auto;padding:0 20px}
+    .checkout-title{margin-bottom:25px}.checkout-title h1{margin-bottom:8px}.checkout-title p{color:#666}
+    .checkout-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:25px}
+    .checkout-card{background:#fff;border-radius:16px;padding:24px;margin-bottom:20px;box-shadow:0 8px 30px rgba(0,0,0,.06)}
+    .checkout-card h2{margin-top:0;margin-bottom:20px}
+    .address-option,.payment-option{display:block;border:1px solid #ddd;border-radius:12px;padding:15px;margin-bottom:12px;cursor:pointer;transition:.2s}
+    .address-option:hover,.payment-option:hover{border-color:#222}.address-option input,.payment-option input{margin-right:10px}
+    .address-name{font-weight:700}.address-text{display:block;margin-left:25px;margin-top:5px;color:#666;line-height:1.5}
+    .payment-option strong{display:inline-block;margin-bottom:5px}.payment-option small{display:block;margin-left:25px;color:#777}
+    .coupon-box{display:flex;gap:10px;margin-top:15px}.coupon-box input{flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;outline:none}.coupon-box input:focus{border-color:#0b7a45}
+    .summary-row{display:flex;justify-content:space-between;gap:15px;margin:12px 0}.summary-row span:first-child{color:#555}
+    .summary-total{font-size:20px;font-weight:700;border-top:1px solid #ddd;padding-top:15px;margin-top:15px}
+    .checkout-button{width:100%;border:none;border-radius:10px;padding:14px 18px;margin-top:12px;cursor:pointer;font-size:16px;font-weight:700;transition:.2s}.checkout-button:hover{opacity:.92}.checkout-button:disabled{opacity:.6;cursor:not-allowed}
+    .cod-button{background:#222;color:#fff}.online-button{background:#0b7a45;color:#fff}.qr-button{background:#5b35d5;color:#fff}.qr-button:hover{background:#4b29b8}
+    .message-box{padding:12px 15px;border-radius:8px;margin-bottom:15px;background:#f5f5f5}.empty-address{padding:15px;background:#fff4e5;border-radius:10px;margin-bottom:15px}
+    #qr-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;align-items:center;justify-content:center;padding:20px}
+    .qr-modal-box{background:#fff;width:100%;max-width:430px;border-radius:20px;padding:28px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);position:relative}
+    .qr-modal-box h2{margin-top:0;margin-bottom:8px}.qr-modal-description{color:#666;line-height:1.5;margin-bottom:20px}.qr-loading{padding:30px 10px;color:#666}
+    #qr-image{display:none;width:260px;height:260px;object-fit:contain;margin:15px auto;border:1px solid #eee;border-radius:12px}
+    .qr-order-info{display:none;background:#f7f7f7;border-radius:12px;padding:12px;margin:15px 0;line-height:1.8}.qr-status{display:none;margin:15px 0;padding:13px;border-radius:10px;background:#f5f5f5;color:#444;font-weight:600}
+    .qr-status.success{background:#e8f7ef;color:#0b7a45}.qr-status.error{background:#fff0f0;color:#b00020}.qr-close-button{background:#222;color:#fff}
+    .payment-note{padding:12px 14px;background:#f3faf7;border-radius:10px;color:#0b7a45;font-size:14px;margin-top:10px}
+    @media(max-width:800px){.checkout-grid{grid-template-columns:1fr}.checkout-wrapper{margin-top:25px}.coupon-box{flex-direction:column}.coupon-box button{width:100%!important}#qr-image{width:230px;height:230px}}
+</style>
+
+<div class="checkout-wrapper">
+    <div class="checkout-title">
+        <h1>Checkout</h1>
+        <p>Complete your order and choose your payment method.</p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}<div class="message-box">{{ message }}</div>{% endfor %}
+    {% endif %}
+
+    <div class="checkout-grid">
+        <div>
+            <div class="checkout-card">
+                <h2>Delivery Address</h2>
+                {% if addresses %}
+                    {% for address in addresses %}
+                        <label class="address-option">
+                            <input type="radio" name="checkout_address" value="{{ address.id }}" {% if forloop.first %}checked{% endif %}>
+                            <span class="address-name">{{ address.full_name }}</span>
+                            <span class="address-text">
+                                {{ address.house }}, {{ address.street }}, {{ address.area }}<br>
+                                {{ address.city }}, {{ address.state }} - {{ address.pin_code }}<br>
+                                {% if address.phone %}Phone: {{ address.phone }}{% endif %}
+                            </span>
+                        </label>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-address">
+                        <p>You don't have any delivery address yet.</p>
+                        <a href="{% url 'address_add' %}">Add Delivery Address</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="checkout-card">
+                <h2>Coupon</h2>
+                <form method="post" id="coupon-form">
+                    {% csrf_token %}
+                    <div class="coupon-box">
+                        <input type="text" name="coupon" placeholder="Enter coupon code" value="{{ coupon_code }}">
+                        <button type="submit" class="checkout-button" style="width:auto;margin-top:0;">Apply</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="checkout-card">
+                <h2>Payment Method</h2>
+
+                <label class="payment-option">
+                    <input type="radio" name="payment_method" value="cod" checked>
+                    <strong>Cash on Delivery</strong>
+                    <small>Pay when your order arrives.</small>
+                </label>
+
+                <label class="payment-option">
+                    <input type="radio" name="payment_method" value="upi">
+                    <strong>Online Payment</strong>
+                    <small>Choose UPI, card, or scan a UPI QR code.</small>
+                </label>
+
+                <div id="online-payment-section" style="display:none;">
+                    <label class="payment-option">
+                        <input type="radio" name="online_payment_mode" value="upi" checked>
+                        <strong>UPI</strong>
+                        <small>Pay using a UPI app.</small>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="online_payment_mode" value="card">
+                        <strong>Credit / Debit Card</strong>
+                        <small>Pay securely by card.</small>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="online_payment_mode" value="qr">
+                        <strong>UPI QR Code</strong>
+                        <small>Scan and pay from your UPI app.</small>
+                    </label>
+                    <button type="button" id="online-btn" class="checkout-button online-button">Pay online</button>
+                    <button type="button" id="qr-btn" class="checkout-button qr-button" style="display:none;">Pay with UPI QR</button>
+                </div>
+
+                <button type="button" id="cod-btn" class="checkout-button cod-button">Place Order · Cash on Delivery</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="checkout-card">
+                <h2>Order Summary</h2>
+                {% for line in lines %}
+                    <div class="summary-row"><span>{{ line.product.name }} × {{ line.quantity }}</span><span>₹{{ line.total }}</span></div>
+                {% endfor %}
+                <div class="summary-row"><span>Subtotal</span><span>₹{{ subtotal }}</span></div>
+                <div class="summary-row"><span>Delivery</span><span>{% if delivery %}₹{{ delivery }}{% else %}FREE{% endif %}</span></div>
+                {% if saved %}<div class="summary-row"><span>You saved</span><span>₹{{ saved }}</span></div>{% endif %}
+                {% if coupon_discount %}<div class="summary-row"><span>Coupon Discount</span><span>-₹{{ coupon_discount }}</span></div>{% endif %}
+                <div class="summary-row summary-total"><span>Total</span><span>₹{{ total }}</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="qr-modal">
+    <div class="qr-modal-box">
+        <h2>📱 Scan & Pay</h2>
+        <p class="qr-modal-description">Scan this QR code using Google Pay, PhonePe, Paytm or another UPI app.</p>
+        <div id="qr-loading" class="qr-loading">Creating QR code...</div>
+        <img id="qr-image" src="" alt="UPI QR Code">
+        <div id="qr-order-info" class="qr-order-info">
+            <strong>Order:</strong> <span id="qr-order-number"></span><br>
+            <strong>Amount:</strong> ₹<span id="qr-amount"></span>
+        </div>
+        <div id="qr-status" class="qr-status">Waiting for payment...</div>
+        <button type="button" id="qr-close-btn" class="checkout-button qr-close-button">Close</button>
+    </div>
+</div>
+
+<form id="checkout-form" style="display:none;">{% csrf_token %}</form>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+(function(){
+    const csrfToken = document.querySelector('#checkout-form input[name="csrfmiddlewaretoken"]').value;
+    const checkoutUrl = "{% url 'checkout' %}";
+    const createPaymentUrl = "{% url 'create_payment' %}";
+    const verifyPaymentUrl = "{% url 'verify_payment' %}";
+    const createQrUrl = "{% url 'create_qr_payment' %}";
+    const checkQrUrl = "{% url 'check_qr_payment' %}";
+
+    let qrPollingTimer = null;
+
+    function getSelectedAddress(){
+        const el=document.querySelector('input[name="checkout_address"]:checked');
+        return el ? el.value : null;
+    }
+    function getPaymentMethod(){
+        const el=document.querySelector('input[name="payment_method"]:checked');
+        return el ? el.value : null;
+    }
+    function getOnlinePaymentMode(){
+        const el=document.querySelector('input[name="online_payment_mode"]:checked');
+        return el ? el.value : "upi";
+    }
+    function getCoupon(){
+        const el=document.querySelector('#coupon-form input[name="coupon"]');
+        return el ? el.value.trim() : "";
+    }
+    function updatePaymentButtons(){
+        const online=getPaymentMethod()==="upi";
+        const mode=getOnlinePaymentMode();
+        document.getElementById("cod-btn").style.display=online?"none":"block";
+        document.getElementById("online-payment-section").style.display=online?"block":"none";
+        document.getElementById("online-btn").style.display=mode==="qr"?"none":"block";
+        document.getElementById("qr-btn").style.display=mode==="qr"?"block":"none";
+        document.getElementById("online-btn").innerText="Pay ₹{{ total }} with "+(mode==="card"?"Card":"UPI");
+    }
+    document.querySelectorAll('input[name="payment_method"]').forEach(r=>r.addEventListener("change",updatePaymentButtons));
+    document.querySelectorAll('input[name="online_payment_mode"]').forEach(r=>r.addEventListener("change",updatePaymentButtons));
+    updatePaymentButtons();
+
+    document.getElementById("cod-btn").addEventListener("click",function(){
+        const address=getSelectedAddress();
+        if(!address){alert("Please select a delivery address.");return;}
+        const button=this;
+        const fd=new FormData();
+        fd.append("csrfmiddlewaretoken",csrfToken);
+        fd.append("place_order","1");
+        fd.append("payment_method","cod");
+        fd.append("address",address);
+        fd.append("coupon",getCoupon());
+        button.disabled=true; button.innerText="Placing Order...";
+        fetch(checkoutUrl,{method:"POST",body:fd,headers:{"X-Requested-With":"XMLHttpRequest"}})
+            .then(r=>{if(r.redirected){location.href=r.url;return null;}return r.text();})
+            .then(()=>{if(location.pathname.includes("/checkout")) location.reload();})
+            .catch(err=>{console.error(err);alert("Could not place the order.");button.disabled=false;button.innerText="Place Order · Cash on Delivery";});
+    });
+
+    document.getElementById("online-btn").addEventListener("click",function(){
+        const address=getSelectedAddress();
+        if(!address){alert("Please select a delivery address.");return;}
+        if(getPaymentMethod()!=="upi"){alert("Please select Online Payment.");return;}
+        const paymentMode=getOnlinePaymentMode();
+        if(paymentMode==="qr"){alert("Please use the UPI QR button.");return;}
+        if(typeof Razorpay === "undefined"){alert("Razorpay Checkout could not be loaded. Check your internet connection.");return;}
+
+        const button=this;
+        const fd=new FormData();
+        fd.append("csrfmiddlewaretoken",csrfToken);
+        fd.append("address",address);
+        fd.append("payment_method",paymentMode);
+        fd.append("coupon",getCoupon());
+        button.disabled=true; button.innerText="Creating Payment...";
+
+        fetch(createPaymentUrl,{method:"POST",body:fd,headers:{"X-Requested-With":"XMLHttpRequest"}})
+        .then(async r=>{const data=await r.json();if(!r.ok||!data.success)throw new Error(data.message||"Could not create payment.");return data;})
+        .then(data=>{
+            const options={
+                key:data.key_id || data.key,
+                amount:data.amount,
+                currency:data.currency || "INR",
+                name:"BasketBee",
+                description:"BasketBee Grocery Order",
+                order_id:data.razorpay_order_id || data.order_id,
+                config:{
+                    display:{
+                        blocks:{
+                            selected_method:{
+                                name:paymentMode==="card"?"Pay via Card":"Pay via UPI",
+                                instruments:[{method:paymentMode}]
+                            }
+                        },
+                        sequence:["block.selected_method"],
+                        preferences:{show_default_blocks:false}
+                    }
+                },
+                handler:function(response){verifyPayment(response);},
+                prefill:{name:"{{ request.user.get_full_name|escapejs }}",email:"{{ request.user.email|escapejs }}"},
+                theme:{color:"#0b7a45"},
+                modal:{ondismiss:function(){button.disabled=false;updatePaymentButtons();}}
+            };
+            const razorpay=new Razorpay(options);
+            razorpay.on("payment.failed",function(response){console.error("RAZORPAY PAYMENT FAILED:",response);alert("Payment failed. Please try again.");button.disabled=false;updatePaymentButtons();});
+            razorpay.open();
+        })
+        .catch(err=>{console.error("ONLINE PAYMENT ERROR:",err);alert(err.message||"Could not start online payment.");button.disabled=false;updatePaymentButtons();});
+    });
+
+    function verifyPayment(response){
+        const button=document.getElementById("online-btn");
+        button.disabled=true;button.innerText="Verifying Payment...";
+        const fd=new FormData();
+        fd.append("csrfmiddlewaretoken",csrfToken);
+        fd.append("razorpay_payment_id",response.razorpay_payment_id||"");
+        fd.append("razorpay_order_id",response.razorpay_order_id||"");
+        fd.append("razorpay_signature",response.razorpay_signature||"");
+        fetch(verifyPaymentUrl,{method:"POST",body:fd,headers:{"X-Requested-With":"XMLHttpRequest"}})
+        .then(async r=>{const data=await r.json();if(!r.ok||!data.success)throw new Error(data.message||"Payment verification failed.");return data;})
+        .then(data=>{location.href=data.redirect_url || ("{% url 'orders' %}");})
+        .catch(err=>{console.error("PAYMENT VERIFICATION ERROR:",err);alert(err.message||"Payment verification failed.");button.disabled=false;updatePaymentButtons();});
+    }
+
+    document.getElementById("qr-btn").addEventListener("click",function(){
+        const address=getSelectedAddress();
+        if(!address){alert("Please select a delivery address.");return;}
+        if(getPaymentMethod()!=="upi"){alert("Please select Online Payment first.");return;}
+        if(getOnlinePaymentMode()!=="qr"){alert("Please select UPI QR Code.");return;}
+
+        const button=this, modal=document.getElementById("qr-modal"), loading=document.getElementById("qr-loading"), image=document.getElementById("qr-image"), info=document.getElementById("qr-order-info"), status=document.getElementById("qr-status");
+        button.disabled=true;button.innerText="Creating QR...";modal.style.display="flex";
+        loading.style.display="block";loading.innerText="Creating QR code...";image.style.display="none";image.src="";info.style.display="none";status.style.display="none";status.className="qr-status";
+
+        const fd=new FormData();
+        fd.append("csrfmiddlewaretoken",csrfToken);fd.append("address",address);fd.append("coupon",getCoupon());
+        fetch(createQrUrl,{method:"POST",body:fd,headers:{"X-Requested-With":"XMLHttpRequest"}})
+        .then(async r=>{const data=await r.json();if(!r.ok||!data.success)throw new Error(data.message||"Could not create QR payment.");return data;})
+        .then(data=>{
+            loading.style.display="none";image.src=data.qr_image_url||data.image_url;image.style.display="block";
+            document.getElementById("qr-order-number").innerText=data.order_number;document.getElementById("qr-amount").innerText=(Number(data.amount)/100).toFixed(2);
+            info.style.display="block";status.style.display="block";status.className="qr-status";status.innerText="Waiting for payment...";
+            button.disabled=false;button.innerText="📱 Pay with UPI QR";startQrPolling(data.qr_id);
+        })
+        .catch(err=>{console.error("QR PAYMENT ERROR:",err);loading.style.display="block";loading.innerText="Could not create QR code.";status.style.display="block";status.className="qr-status error";status.innerText=err.message||"Could not create QR payment.";button.disabled=false;button.innerText="📱 Pay with UPI QR";});
+    });
+
+    function startQrPolling(qrId){
+        if(qrPollingTimer)clearInterval(qrPollingTimer);
+        let attempts=0,maxAttempts=100;
+        qrPollingTimer=setInterval(()=>{attempts++;checkQrPayment(qrId);if(attempts>=maxAttempts){clearInterval(qrPollingTimer);qrPollingTimer=null;const s=document.getElementById("qr-status");s.style.display="block";s.className="qr-status error";s.innerText="QR payment session expired. Please create a new QR.";}},3000);
+    }
+
+    function checkQrPayment(qrId){
+        const fd=new FormData();fd.append("csrfmiddlewaretoken",csrfToken);fd.append("qr_id",qrId);
+        fetch(checkQrUrl,{method:"POST",body:fd,headers:{"X-Requested-With":"XMLHttpRequest"}})
+        .then(async r=>{const data=await r.json();if(!r.ok && data.status!=="pending")throw new Error(data.message||"Could not check payment.");return data;})
+        .then(data=>{
+            const s=document.getElementById("qr-status");
+            if(data.paid || data.status==="paid"){
+                if(qrPollingTimer){clearInterval(qrPollingTimer);qrPollingTimer=null;}
+                s.style.display="block";s.className="qr-status success";s.innerText="✅ Payment successful! Redirecting...";
+                setTimeout(()=>{location.href=data.redirect_url || ("{% url 'orders' %}");},1000);return;
+            }
+            if(data.status==="failed"){s.style.display="block";s.className="qr-status error";s.innerText=data.message||"Payment failed. Please try again.";return;}
+            s.style.display="block";s.className="qr-status";s.innerText="Waiting for payment...";
+        })
+        .catch(err=>console.error("QR CHECK ERROR:",err));
+    }
+
+    function closeQrModal(){
+        document.getElementById("qr-modal").style.display="none";
+        if(qrPollingTimer){clearInterval(qrPollingTimer);qrPollingTimer=null;}
+    }
+    document.getElementById("qr-close-btn").addEventListener("click",closeQrModal);
+    document.getElementById("qr-modal").addEventListener("click",function(e){if(e.target===this)closeQrModal();});
+})();
+</script>
+{% endblock %}

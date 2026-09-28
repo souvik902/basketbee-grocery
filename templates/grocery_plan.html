@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h1>Smart Grocery Planner</h1>
+        <p>Build a simple weekly rhythm, then add the whole plan in one click.</p>
+    </div>
+    <form method="post" action="{% url 'plan_to_cart' %}">
+        {% csrf_token %}
+        <button class="button">Add entire plan to cart</button>
+    </form>
+</div>
+<div class="two-col">
+    <section class="card">
+        <h2>{{ plan.name }}</h2>
+        {% for item in plan.items.all %}
+            <div class="cart-item">
+                <span><b>{{ item.day }}</b> · {{ item.product.name }} ({{ item.quantity }})</span>
+                <form method="post" action="{% url 'plan_remove' item.id %}">
+                    {% csrf_token %}
+                    <button class="link danger">Remove</button>
+                </form>
+            </div>
+        {% empty %}
+            <p>Your week is clear. Add products from the menu.</p>
+        {% endfor %}
+    </section>
+    <section class="card">
+        <h2>Add a grocery</h2>
+        {% for product in products %}
+            <div class="cart-item">
+                <span>{{ product.name }}</span>
+                <form method="post" action="{% url 'plan_add' product.id %}">
+                    {% csrf_token %}
+                    <select name="day">
+                        <option>Monday</option>
+                        <option>Tuesday</option>
+                        <option>Wednesday</option>
+                        <option>Thursday</option>
+                        <option>Friday</option>
+                        <option>Saturday</option>
+                        <option>Sunday</option>
+                    </select>
+                    <button class="outline">Add</button>
+                </form>
+            </div>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

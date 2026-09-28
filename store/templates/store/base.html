@@ -1,0 +1,250 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>
+    {% block title %}
+      BasketBee — groceries delivered in minutes
+    {% endblock %}
+  </title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link
+    rel="stylesheet"
+    href="{% static 'store/css/style.css' %}"
+  >
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+
+{% csrf_token %}
+
+
+<!-- ============================= -->
+<!-- HEADER -->
+<!-- ============================= -->
+
+<header class="topbar">
+
+  <div class="topbar__inner">
+
+    <!-- LOGO -->
+
+    <a href="{% url 'home' %}" class="brand">
+
+      <img
+        class="brand__logo"
+        src="{% static 'store/images/basketbee-icon.png' %}"
+        alt="BasketBee"
+      >
+
+      <span class="brand__name">
+        BASKETBEE
+      </span>
+
+    </a>
+
+
+    <!-- DELIVERY -->
+
+    <div class="delivery-pill">
+
+      <strong>
+        Delivery in 9 minutes
+      </strong>
+
+      <span>
+        Krishnanagar, West Bengal
+      </span>
+
+    </div>
+
+
+    <!-- SEARCH -->
+
+    <form
+      class="search-form"
+      action="{% url 'home' %}"
+      method="get"
+    >
+
+      <input
+        type="text"
+        name="q"
+        placeholder="Search product…"
+        value="{{ query|default:'' }}"
+      >
+
+    </form>
+
+
+    <!-- ACTIONS -->
+
+    <div class="topbar__actions">
+
+
+      {% if user.is_authenticated and user.is_staff %}
+
+        {% if request.resolver_match.url_name != 'checkout' %}
+          <a
+            class="owner-link"
+            href="/admin/"
+          >
+            Admin dashboard
+          </a>
+        {% endif %}
+
+      {% else %}
+
+        <a
+          class="owner-link"
+          href="{% url 'admin_login' %}"
+        >
+          Admin login
+        </a>
+
+      {% endif %}
+
+
+      {% if not user.is_authenticated %}
+
+        <a
+          class="owner-link"
+          href="{% url 'login' %}"
+        >
+          Login
+        </a>
+
+      {% else %}
+
+        <a
+          class="owner-link"
+          href="{% url 'profile' %}"
+        >
+          Profile
+        </a>
+
+      {% endif %}
+
+
+      <!-- BASKET -->
+
+      <a
+        class="icon-btn"
+        href="{% url 'cart' %}"
+      >
+
+        🧺 Basket
+
+        {% if cart_count %}
+
+          <span
+            class="badge"
+            id="cart-badge"
+          >
+            {{ cart_count }}
+          </span>
+
+        {% endif %}
+
+      </a>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+<!-- ============================= -->
+<!-- DJANGO MESSAGES -->
+<!-- ============================= -->
+
+<div class="container">
+
+  {% if messages %}
+
+    <ul class="messages">
+
+      {% for message in messages %}
+
+        <li class="{{ message.tags }}">
+          {{ message }}
+        </li>
+
+      {% endfor %}
+
+    </ul>
+
+  {% endif %}
+
+</div>
+
+
+<!-- ============================= -->
+<!-- MAIN CONTENT -->
+<!-- ============================= -->
+
+{% block content %}{% endblock %}
+
+
+<!-- ============================= -->
+<!-- FOOTER -->
+<!-- ============================= -->
+
+<footer>
+
+  BasketBee · fresh groceries, delivered fast · this is a storefront
+
+</footer>
+
+
+<!-- ============================= -->
+<!-- CART BAR -->
+<!-- ============================= -->
+
+<div
+  class="cart-bar"
+  id="cart-bar"
+>
+
+  <strong>
+
+    <span id="cart-bar-count">
+      {{ cart_count }}
+    </span>
+
+    item(s) in your basket
+
+  </strong>
+
+
+  <a href="{% url 'cart' %}">
+    View basket →
+  </a>
+
+</div>
+
+
+<!-- ============================= -->
+<!-- JAVASCRIPT -->
+<!-- ============================= -->
+
+<script src="{% static 'store/js/main.js' %}"></script>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

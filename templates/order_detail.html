@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <p class="eyebrow">Order {{ order.order_number }}</p>
+        <h1>{{ order.get_status_display }}</h1>
+    </div>
+    <b>₹{{ order.total_amount }}</b>
+</div>
+<div class="two-col">
+    <section class="card">
+        <h2>Items</h2>
+        {% for item in order.items.all %}
+            <p>
+                <b>{{ item.product.name }}</b> × {{ item.quantity }} 
+                <span class="right">₹{{ item.total }}</span>
+            </p>
+        {% endfor %}
+    </section>
+    <aside class="card">
+        <h2>Tracking</h2>
+        <ol class="timeline">
+            <li class="done">Order placed</li>
+            <li class="{% if order.status != 'placed' %}done{% endif %}">Confirmed</li>
+            <li class="{% if order.status == 'packing' or order.status == 'delivery' or order.status == 'delivered' %}done{% endif %}">Packing</li>
+            <li class="{% if order.status == 'delivery' or order.status == 'delivered' %}done{% endif %}">Out for delivery</li>
+            <li class="{% if order.status == 'delivered' %}done{% endif %}">Delivered</li>
+        </ol>
+        <p><b>Deliver to:</b><br>{{ order.address }}</p>
+    </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Shop | BasketBee{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h1>{% if query %}Results for “{{ query }}”{% else %}All groceries{% endif %}</h1>
+    <p>Freshly selected essentials for your home.</p>
+</div>
+<div class="product-grid">
+    {% for product in products %}
+        {% include 'includes/product_card.html' %}
+    {% empty %}
+        <div class="empty">
+            <h2>No products found</h2>
+            <p>Try another search or browse a different aisle.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

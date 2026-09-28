@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<section class="product-detail-page">
+
+    <!-- LEFT: PRODUCT IMAGE -->
+    <div class="product-gallery">
+
+        <!-- Main Image -->
+        <div class="main-product-image" id="zoomContainer">
+
+            {% if product.image %}
+                <img
+                    id="mainProductImage"
+                    src="{{ product.image.url }}"
+                    alt="{{ product.name }}"
+                >
+            {% else %}
+                <div class="no-product-image">
+                    {{ product.category.icon }}
+                </div>
+            {% endif %}
+
+            <!-- Zoom Lens -->
+            <div class="zoom-lens" id="zoomLens"></div>
+        </div>
+
+
+        <!-- Thumbnail Gallery -->
+        <div class="thumbnail-wrapper">
+
+            {% if product.image %}
+                <button
+                    type="button"
+                    class="thumbnail active"
+                    onclick="changeProductImage('{{ product.image.url }}', this)"
+                >
+                    <img
+                        src="{{ product.image.url }}"
+                        alt="{{ product.name }}"
+                    >
+                </button>
+            {% endif %}
+
+
+            <!-- IMPORTANT: .all -->
+            {% for photo in product.gallery.all %}
+
+                <button
+                    type="button"
+                    class="thumbnail"
+                    onclick="changeProductImage('{{ photo.image.url }}', this)"
+                >
+                    <img
+                        src="{{ photo.image.url }}"
+                        alt="{{ photo.alt_text|default:product.name }}"
+                    >
+                </button>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- RIGHT: PRODUCT INFORMATION -->
+    <div class="product-information">
+
+        <p class="eyebrow">
+            {{ product.category.name }}
+        </p>
+
+        <h1>{{ product.name }}</h1>
+
+        <p class="product-meta">
+            {{ product.brand }}
+            ·
+            {{ product.unit }}
+            ·
+            ★ {{ product.rating }}
+        </p>
+
+        <div class="product-price">
+
+            <strong>
+                ₹{{ product.selling_price }}
+            </strong>
+
+            {% if product.discount_price %}
+                <del>
+                    ₹{{ product.price }}
+                </del>
+
+                <span class="discount-label">
+                    {{ product.discount_percent }}% OFF
+                </span>
+            {% endif %}
+
+        </div>
+
+        <p class="product-description">
+            {{ product.description }}
+        </p>
+
+
+        {% if product.stock %}
+
+            <p class="stock-status">
+                ✓ In stock — {{ product.stock }} available
+            </p>
+
+        {% else %}
+
+            <p class="out-stock">
+                Out of stock
+            </p>
+
+        {% endif %}
+
+
+        {% if product.stock %}
+
+            <form
+                method="post"
+                action="{% url 'add_cart' product.id %}"
+            >
+
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="add-basket-button"
+                >
+                    Add to basket
+                </button>
+
+            </form>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+
+<!-- REVIEWS -->
+
+<section class="reviews-section">
+
+    <h2>Customer reviews</h2>
+
+    {% for r in reviews %}
+
+        <article class="review">
+
+            <b>
+                {{ r.user.first_name|default:r.user.username }}
+                · ★{{ r.rating }}
+            </b>
+
+            <p>
+                {{ r.comment }}
+            </p>
+
+        </article>
+
+    {% empty %}
+
+        <p>
+            No reviews yet. Be the first to share a thought.
+        </p>
+
+    {% endfor %}
+
+
+    {% if user.is_authenticated %}
+
+        <form
+            method="post"
+            action="{% url 'review' product.slug %}"
+            class="card form"
+        >
+
+            {% csrf_token %}
+
+            {{ review_form.as_p }}
+
+            <button class="button">
+                Save review
+            </button>
+
+        </form>
+
+    {% endif %}
+
+</section>
+
+
+<!-- RELATED PRODUCTS -->
+
+<section class="related-products">
+
+    <div class="section-heading">
+
+        <h2>
+            You may also like
+        </h2>
+
+    </div>
+
+    <div class="product-grid">
+
+        {% for related_product in related %}
+
+            {% include 'includes/product_card.html' with product=related_product %}
+
+        {% empty %}
+
+            <p>No related products available.</p>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<script>
+
+function changeProductImage(imageUrl, thumbnail) {
+
+    const mainImage =
+        document.getElementById("mainProductImage");
+
+    if (mainImage) {
+
+        mainImage.src = imageUrl;
+
+    }
+
+    // Remove active from all thumbnails
+    document
+        .querySelectorAll(".thumbnail")
+        .forEach(function(item) {
+
+            item.classList.remove("active");
+
+        });
+
+    // Add active to selected thumbnail
+    thumbnail.classList.add("active");
+}
+
+
+/* =========================
+   MOUSE HOVER ZOOM
+========================= */
+
+const zoomContainer =
+    document.getElementById("zoomContainer");
+
+const mainImage =
+    document.getElementById("mainProductImage");
+
+if (zoomContainer && mainImage) {
+
+    zoomContainer.addEventListener(
+        "mousemove",
+        function(event) {
+
+            const rect =
+                zoomContainer.getBoundingClientRect();
+
+            const x =
+                ((event.clientX - rect.left) / rect.width) * 100;
+
+            const y =
+                ((event.clientY - rect.top) / rect.height) * 100;
+
+            mainImage.style.transformOrigin =
+                `${x}% ${y}%`;
+
+            mainImage.style.transform =
+                "scale(2.2)";
+
+        }
+    );
+
+
+    zoomContainer.addEventListener(
+        "mouseleave",
+        function() {
+
+            mainImage.style.transform =
+                "scale(1)";
+
+            mainImage.style.transformOrigin =
+                "center center";
+
+        }
+    );
+
+}
+
+</script>
+
+{% endblock %}

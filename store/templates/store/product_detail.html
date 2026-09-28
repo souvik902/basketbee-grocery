@@ -1,0 +1,43 @@
+{% extends "store/base.html" %}
+{% block title %}{{ product.name }} — BasketBee{% endblock %}
+{% block content %}
+<section class="section" style="max-width:760px;">
+  <div class="card" style="flex-direction:row; align-items:flex-start; gap:24px; padding:24px;">
+    <div class="card__image" style="width:220px; flex-shrink:0;">
+      {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+      {% else %}
+        🛍️
+      {% endif %}
+    </div>
+    <div style="flex:1;">
+      <span class="card__delivery">{{ product.delivery_minutes }} mins delivery</span>
+      <h1 style="margin:10px 0 4px; font-size:1.4rem;">{{ product.name }}</h1>
+      <p class="card__unit">{{ product.unit_label }} · {{ product.category.name }}</p>
+      <p style="margin:14px 0; color:var(--hive-soft);">{{ product.description|default:"No description added yet." }}</p>
+      <div class="card__price-row" style="margin-top:20px;">
+        <div>
+          <span class="card__price" style="font-size:1.3rem;">₹{{ product.price }}</span>
+          {% if product.mrp and product.mrp > product.price %}
+            <span class="card__mrp">₹{{ product.mrp }}</span>
+          {% endif %}
+        </div>
+        {% if product.in_stock %}
+          <button class="btn btn--primary" style="width:auto;" data-add-url="{% url 'store:cart_add' product.id %}" id="detail-add-btn">Add to basket</button>
+        {% else %}
+          <span class="out-of-stock">Sold out</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.getElementById('detail-add-btn')?.addEventListener('click', function () {
+    basketbeeAddToCart(this.dataset.addUrl).then(() => {
+      this.textContent = 'Added ✓';
+      setTimeout(() => { this.textContent = 'Add to basket'; }, 1200);
+    });
+  });
+</script>
+{% endblock %}

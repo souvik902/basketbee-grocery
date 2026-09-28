@@ -1,0 +1,50 @@
+{% extends "store/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<nav class="category-rail">
+  <a class="chip {% if not selected_category %}is-active{% endif %}" href="{% url 'store:home' %}">🛒 All items</a>
+  {% for cat in categories %}
+    <a class="chip {% if selected_category == cat.slug %}is-active{% endif %}"
+       href="?category={{ cat.slug }}">{{ cat.icon }} {{ cat.name }}</a>
+  {% endfor %}
+</nav>
+
+{% if not query and not selected_category %}
+<div class="hero">
+  <div>
+    <h1>Groceries at bee-speed, straight to your door</h1>
+    <p>Fresh vegetables, dairy, snacks and household essentials — packed and out the door before the kettle boils.</p>
+  </div>
+  <div class="hero__badge">
+    <span class="num">9</span>
+    <span class="unit">minutes</span>
+  </div>
+</div>
+{% endif %}
+
+<section class="section">
+  <div class="section__head">
+    <h2>
+      {% if query %}Results for "{{ query }}"
+      {% elif selected_category %}{{ products.first.category.name|default:"Products" }}
+      {% else %}Popular right now{% endif %}
+    </h2>
+    <span>{{ products|length }} item(s)</span>
+  </div>
+
+  {% if products %}
+  <div class="product-grid">
+    {% for product in products %}
+      {% include "store/_product_card.html" %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p>No products match yet. {% if user.is_staff %}<a href="{% url 'store:product_add' %}">Add the first one →</a>{% else %}Please check back soon.{% endif %}</p>
+  </div>
+  {% endif %}
+</section>
+
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="auth card">
+    <h1>Sign in to BasketBee</h1>
+    {% if not otp_sent %}
+    <form method="post" class="form">
+        {% csrf_token %}
+        {{ phone_form.as_p }}
+        <button class="button" name="action" value="send_otp">Send OTP</button>
+    </form>
+    {% else %}
+    <p>Enter the verification code sent to your mobile.</p>
+    {% if demo_otp %}<p class="message">Demo OTP: <strong>{{ demo_otp }}</strong></p>{% endif %}
+    <form method="post" class="form" id="otp-form">
+        {% csrf_token %}
+        {{ otp_form.as_p }}
+        <button class="button" name="action" value="verify_otp">Verify and sign in</button>
+    </form>
+    <form method="post" class="form">
+        {% csrf_token %}
+        {{ phone_form.as_p }}
+        <button class="outline" name="action" value="send_otp">Send a new OTP</button>
+    </form>
+    {% endif %}
+    <p>New here? <a href="{% url 'register' %}">Create an account</a></p>
+</div>
+{% if otp_sent %}
+<script>
+const otpForm = document.getElementById('otp-form');
+if (otpForm && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition((position) => {
+        const latitude = otpForm.querySelector('[name="latitude"]');
+        const longitude = otpForm.querySelector('[name="longitude"]');
+        if (latitude) latitude.value = position.coords.latitude;
+        if (longitude) longitude.value = position.coords.longitude;
+    });
+}
+</script>
+{% endif %}
+{% endblock %}

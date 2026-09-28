@@ -1,0 +1,200 @@
+/* BasketBee's compact admin-ready top bar. */
+.site-header{
+    box-shadow:0 1px 7px rgba(24,52,42,.08);
+    border-bottom:0
+}
+.topbar{
+    min-height:68px;
+    display:flex;
+    align-items:center;
+    gap:22px
+}
+.topbar .brand{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-size:18px;
+    letter-spacing:.4px;
+    color:#f05d4f
+}
+.topbar .brand span{
+    color:#f05d4f
+}
+.brand-mark{
+    display:grid;
+    place-items:center;
+    width:34px;
+    height:34px;
+    background:#e6f3d0;
+    border-radius:7px;
+    font-style:normal;
+    font-size:19px
+}
+.delivery{
+    padding-left:18px;
+    border-left:1px solid #d7ddd3;
+    display:grid;
+    gap:2px;
+    white-space:nowrap
+}
+.delivery strong{
+    font-size:15px
+}
+.delivery small{
+    font-size:13px;
+    color:#5c665f
+}
+.top-search{
+    flex:1
+}
+.top-search input{
+    width:100%;
+    background:#fff7e8;
+    border:1px solid #f0e2c8;
+    border-radius:15px;
+    padding:12px 16px;
+    min-width:170px
+}
+.top-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    white-space:nowrap
+}
+.admin-action,.login-action{
+    padding:10px 15px;
+    border:1px solid #eadfcf;
+    border-radius:13px;
+    color:#5c4b3b;
+    background:#fff
+}
+.account-menu{
+    position:relative
+}
+.account-menu summary{
+    list-style:none;
+    cursor:pointer
+}
+.account-menu summary::-webkit-details-marker{
+    display:none
+}
+.account-menu .login-action{
+    border:0;
+    background:transparent;
+    padding-left:0;
+    padding-right:0
+}
+.account-menu summary::after{
+    content:'▾';
+    display:inline-block;
+    margin-left:7px;
+    color:#1f2522;
+    font-size:13px
+}
+.account-dropdown{
+    position:absolute;
+    top:calc(100% + 12px);
+    right:0;
+    z-index:20;
+    display:grid;
+    min-width:220px;
+    padding:18px 18px 12px;
+    background:#fff;
+    border:1px solid #e8e0d5;
+    border-radius:0 0 4px 4px;
+    box-shadow:0 10px 24px rgba(24,52,42,.14)
+}
+.account-dropdown strong{
+    color:#4e514d;
+    font-size:16px
+}
+.account-dropdown small{
+    color:#69736d;
+    margin:2px 0 16px
+}
+.account-dropdown a{
+    padding:9px 0;
+    color:#69736d;
+    font-size:14px
+}
+.account-dropdown a:hover{
+    color:var(--green)
+}
+.basket-action{
+    padding:11px 17px;
+    border-radius:14px;
+    background:#1d1916;
+    color:#fff;
+    font-weight:bold
+}
+.admin-auth{
+    max-width:500px;
+    margin:38px auto
+}
+.small-note{
+    color:var(--muted);
+    font-size:14px
+}
+@media(max-width:900px){
+    .topbar{
+        flex-wrap:wrap;
+        padding-top:10px;
+        padding-bottom:10px
+    }
+    .top-search{
+        order:3;
+        flex-basis:100%
+    }
+    .delivery{
+        padding-left:10px
+    }
+    .top-actions{
+        margin-left:auto
+    }
+}
+@media(max-width:520px){
+    .delivery{
+        display:none
+    }
+    .topbar{
+        gap:10px
+    }
+    .top-actions{
+        gap:5px
+    }
+    .admin-action,
+    .login-action{
+        padding:8px
+    }
+    .basket-action{
+        padding:9px
+    }
+    .top-actions{
+        font-size:13px
+    }
+}
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.brand-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    display: block;
+}
+.top-search input {
+    transition: all 0.3s ease;
+}
+
+.top-search input::placeholder {
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.top-search input.placeholder-slide::placeholder {
+    opacity: 0;
+}

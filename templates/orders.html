@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>My orders</h1>
+{% for order in orders %}
+    <article class="card order">
+        <div>
+            <b>{{ order.order_number }}</b>
+            <p>{{ order.created_at|date:'d M Y' }} · {{ order.get_status_display }}</p>
+        </div>
+        <div>
+            <b>₹{{ order.total_amount }}</b>
+            <a href="{% url 'order_detail' order.order_number %}">Track order</a>
+            <form method="post" action="{% url 'reorder' order.order_number %}" class="inline">
+                {% csrf_token %}
+                <button class="outline">Buy again</button>
+            </form>
+        </div>
+    </article>
+{% empty %}
+    <div class="empty">
+        <h2>No orders yet</h2>
+        <a class="button" href="{% url 'products' %}">Start shopping</a>
+    </div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Admin login | BasketBee{% endblock %}
+{% block content %}
+<div class="admin-auth card">
+  <p class="eyebrow">BasketBee management</p>
+  <h1>Admin login</h1>
+  <p>Use an authorised administrator account to manage products, orders, customers and offers.</p>
+  <form method="post" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="button">Sign in to admin</button>
+  </form>
+  <p class="small-note">Customer account? <a href="{% url 'login' %}">Use the regular login</a>.</p>
+</div>
+{% endblock %}

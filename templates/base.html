@@ -1,0 +1,23 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}BasketBee{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'css/topbar.css' %}?v=2">
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+    <main class="wrap">
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+        {% block content %}
+        {% endblock %}
+    </main>
+    {% include 'includes/footer.html' %}
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>

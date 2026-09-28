@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">Grocery shopping, gentler</p>
+        <h1>Good food arrives with a little more joy.</h1>
+        <p>Everyday essentials, fresh produce and a weekly plan that keeps life moving.</p>
+        <a class="button" href="{% url 'products' %}">Browse groceries</a>
+    </div>
+    <div class="hero-art">🍋<span>🥬</span><span>🥖</span></div>
+</section>
+<section>
+    <div class="section-heading">
+        <h2>Explore aisles</h2>
+        <a href="{% url 'products' %}">View all</a>
+    </div>
+    <div class="categories">
+        {% for c in categories %}
+            <a href="{% url 'category' c.slug %}">
+                <i>{{ c.icon }}</i>
+                <strong>{{ c.name }}</strong>
+                <small>{{ c.products.count }} choices</small>
+            </a>
+        {% endfor %}
+    </div>
+</section>
+<section>
+    <div class="section-heading">
+        <h2>Popular picks</h2>
+        <a href="{% url 'products' %}">See more</a>
+    </div>
+    <div class="product-grid">
+        {% for product in popular %}
+            {% include 'includes/product_card.html' %}
+        {% endfor %}
+    </div>
+</section>
+<section>
+    <div class="section-heading">
+        <h2>Best deals</h2>
+    </div>
+    <div class="product-grid">
+        {% for product in deals %}
+            {% include 'includes/product_card.html' %}
+        {% empty %}
+            <p>Deals will bloom here soon.</p>
+        {% endfor %}
+    </div>
+</section>
+{% if recent %}
+<section>
+    <div class="section-heading">
+        <h2>Recently viewed</h2>
+    </div>
+    <div class="product-grid">
+        {% for product in recent %}
+            {% include 'includes/product_card.html' %}
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

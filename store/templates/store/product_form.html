@@ -1,0 +1,57 @@
+{% extends "store/base.html" %}
+{% block title %}{{ heading }} — BasketBee{% endblock %}
+{% block content %}
+<section class="section" style="max-width:560px;">
+  <div class="form-card form-card--wide">
+    <h1>{{ heading }}</h1>
+    <p class="subtitle">This appears on the storefront as soon as you save it.</p>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="field product-photo-field">
+        <label for="{{ form.image.id_for_label }}">Product photo</label>
+        <div class="photo-upload">
+          <div class="photo-preview" id="photo-preview">
+            {% if product.image %}
+              <img src="{{ product.image.url }}" alt="Current photo for {{ product.name }}">
+            {% else %}
+              <span>📷</span>
+              <small>Photo preview</small>
+            {% endif %}
+          </div>
+          <div>
+            {{ form.image }}
+            <p class="helptext">Upload a clear product photo (JPG, PNG, or WebP).</p>
+            {% if form.image.errors %}<ul class="errorlist">{% for e in form.image.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% for field in form %}
+        {% if field.name != "image" %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<p class="helptext">{{ field.help_text }}</p>{% endif %}
+          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+        {% endif %}
+      {% endfor %}
+      <button type="submit" class="btn btn--primary">Save product</button>
+    </form>
+  </div>
+</section>
+<script>
+  const photoInput = document.getElementById("{{ form.image.id_for_label }}");
+  const photoPreview = document.getElementById("photo-preview");
+
+  photoInput.addEventListener("change", () => {
+    const [file] = photoInput.files;
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ({ target }) => {
+      photoPreview.innerHTML = `<img src="${target.result}" alt="Selected product photo preview">`;
+    };
+    reader.readAsDataURL(file);
+  });
+</script>
+{% endblock %}

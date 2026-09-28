@@ -1,0 +1,82 @@
+{% extends "store/base.html" %}
+{% block title %}Admin dashboard — BasketBee{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="dashboard-head">
+    <h1 style="font-size:1.5rem;">Admin dashboard</h1>
+    <div style="display:flex; gap:10px;">
+      <a class="btn btn--ghost" href="{% url 'store:category_add' %}">Add category</a>
+      <a class="btn btn--primary" style="width:auto;" href="{% url 'store:product_add' %}">+ Add new product</a>
+      <a class="btn btn--ghost" href="{% url 'store:owner_logout' %}">Log out</a>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-card"><div class="value">{{ product_count }}</div><div class="label">Products live</div></div>
+    <div class="stat-card"><div class="value">{{ low_stock_count }}</div><div class="label">Low stock (≤5)</div></div>
+    <div class="stat-card"><div class="value">{{ order_count }}</div><div class="label">Orders received</div></div>
+    <div class="stat-card"><div class="value">{{ categories|length }}</div><div class="label">Categories</div></div>
+  </div>
+
+  <h2 style="font-size:1.05rem; margin-bottom:12px;">Your products</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <td>
+            <div class="dashboard-product">
+              <span class="dashboard-product__image">
+                {% if p.image %}
+                  <img src="{{ p.image.url }}" alt="{{ p.name }}">
+                {% else %}
+                  🛍️
+                {% endif %}
+              </span>
+              <span>{{ p.name }}</span>
+            </div>
+          </td>
+          <td>{{ p.category.name }}</td>
+          <td>₹{{ p.price }} / {{ p.unit_label }}</td>
+          <td>{% if p.stock <= 5 %}<span class="tag tag--low">{{ p.stock }} left</span>{% else %}{{ p.stock }}{% endif %}</td>
+          <td>{% if p.is_active %}<span class="tag tag--active">Live</span>{% else %}<span class="tag tag--inactive">Hidden</span>{% endif %}</td>
+          <td class="row-actions">
+            <a class="btn btn--ghost" href="{% url 'store:product_edit' p.id %}">Edit</a>
+            <form method="post" action="{% url 'store:product_delete' p.id %}" onsubmit="return confirm('Remove {{ p.name }}?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn--danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No products yet — <a href="{% url 'store:product_add' %}">add your first one</a>.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h2 style="font-size:1.05rem; margin-bottom:12px;">Recent orders</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Order</th><th>Customer</th><th>Phone</th><th>Total</th><th>Status</th><th>Placed</th></tr></thead>
+      <tbody>
+        {% for o in recent_orders %}
+        <tr>
+          <td>#{{ o.id }}</td>
+          <td>{{ o.customer_name }}</td>
+          <td>{{ o.phone }}</td>
+          <td>₹{{ o.total_amount }}</td>
+          <td><span class="tag tag--active">{{ o.get_status_display }}</span></td>
+          <td>{{ o.created_at|date:"d M, H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No orders placed yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

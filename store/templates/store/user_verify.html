@@ -1,0 +1,23 @@
+{% extends "store/base.html" %}
+{% block title %}Verify OTP — BasketBee{% endblock %}
+{% block content %}
+<section class="section" style="max-width:420px;">
+  <div class="form-card">
+    <h1>Verify your number</h1>
+    <p class="subtitle">Enter the OTP sent to +91 {{ mobile }}.</p>
+    {% if demo_otp %}<p class="subtitle">Demo OTP: <strong>{{ demo_otp }}</strong></p>{% endif %}
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<ul class="errorlist">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      {% endfor %}
+      {% if form.non_field_errors %}<ul class="errorlist">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+      <button type="submit" class="btn btn--primary">Verify OTP</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

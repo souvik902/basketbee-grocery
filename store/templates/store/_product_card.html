@@ -1,0 +1,32 @@
+<div class="card" data-product-id="{{ product.id }}">
+  {% if product.discount_percent %}
+    <span class="card__discount">{{ product.discount_percent }}% off</span>
+  {% endif %}
+  <span class="card__delivery">{{ product.delivery_minutes }} mins</span>
+
+  <a href="{% url 'store:product_detail' product.slug %}" class="card__image">
+    {% if product.image %}
+      <img src="{{ product.image.url }}" alt="{{ product.name }}">
+    {% else %}
+      🛍️
+    {% endif %}
+  </a>
+
+  <span class="card__unit">{{ product.unit_label }}</span>
+  <a href="{% url 'store:product_detail' product.slug %}" class="card__name">{{ product.name }}</a>
+
+  <div class="card__price-row">
+    <div>
+      <span class="card__price">₹{{ product.price }}</span>
+      {% if product.mrp and product.mrp > product.price %}
+        <span class="card__mrp">₹{{ product.mrp }}</span>
+      {% endif %}
+    </div>
+
+    {% if product.in_stock %}
+      <button class="add-btn" data-add-url="{% url 'store:cart_add' product.id %}">Add</button>
+    {% else %}
+      <span class="out-of-stock">Sold out</span>
+    {% endif %}
+  </div>
+</div>

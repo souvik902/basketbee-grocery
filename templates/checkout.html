@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Checkout</h1>
+<form method="post" class="two-col">
+    {% csrf_token %}
+    <section class="card">
+        <h2>1. Delivery address</h2>
+        {% for a in addresses %}
+            <label class="choice">
+                <input required type="radio" name="address" value="{{ a.id }}" {% if a.is_default %}checked{% endif %}>
+                <span>
+                    <b>{{ a.full_name }} · {{ a.phone }}</b>
+                    <br>
+                    {{ a.house }}, {{ a.street }}, {{ a.area }}, {{ a.city }} — {{ a.pin_code }}
+                </span>
+            </label>
+        {% empty %}
+            <p>Add an address before checkout.</p>
+            <a class="button" href="{% url 'address_add' %}">Add address</a>
+        {% endfor %}
+        <h2>2. Payment</h2>
+        <label class="choice">
+            <input type="radio" checked name="payment_method" value="cod">
+            Cash on Delivery
+        </label>
+        <label class="choice">
+            <input type="radio" name="payment_method" value="upi">
+            UPI (demo only)
+        </label>
+        <label class="choice">
+            <input type="radio" name="payment_method" value="card">
+            Card (demo only)
+        </label>
+    </section>
+    <aside class="card summary">
+        <h2>Order total</h2>
+        <p>Subtotal <b>₹{{ subtotal }}</b></p>
+        <p>Delivery <b>₹{{ delivery }}</b></p>
+        <input name="coupon" value="{{ coupon_code }}" placeholder="Coupon code">
+        <button class="outline">Apply coupon</button>
+        {% if coupon_discount %}
+            <p>Coupon <b>−₹{{ coupon_discount }}</b></p>
+        {% endif %}
+        <hr>
+        <h2>₹{{ total }}</h2>
+        {% if addresses %}
+            <button name="place_order" value="1" class="button">Place COD order</button>
+        {% endif %}
+    </aside>
+</form>
+{% endblock %}

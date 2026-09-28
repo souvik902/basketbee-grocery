@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="auth card">
+    <h1>Budget Mode</h1>
+    <p>Set a spending boundary and see how your current basket fits.</p>
+    <form method="post" class="form">
+        {% csrf_token %}
+        <label>My grocery budget (₹)</label>
+        <input type="number" min="0" step="0.01" name="budget" value="{{ budget|default:'' }}" required>
+        <button class="button">Save budget</button>
+    </form>
+    {% if budget is not None %}
+        <hr>
+        <p>Budget <b class="right">₹{{ budget }}</b></p>
+        <p>Current basket <b class="right">₹{{ cart_total }}</b></p>
+        <h2>Remaining <b class="right {% if remaining < 0 %}danger{% endif %}">₹{{ remaining }}</b></h2>
+        {% if remaining < 0 %}
+            <p class="message error">Your basket is over budget by ₹{{ remaining|slice:'1:' }}.</p>
+        {% endif %}
+    {% endif %}
+</div>{% endblock %}
