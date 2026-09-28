@@ -78,37 +78,41 @@ is live. Once deployed, they:
 They can also add new categories, edit prices/stock, or remove a product, all
 from the same dashboard, at any time, from any device.
 
-## 3. Deploying
+## 3. Deploying with GitHub and Vercel
 
-The app is a standard Django project, so it deploys to any Django-friendly host
-(Render, Railway, PythonAnywhere, a VPS, etc.). Rough steps for a typical host:
+The repository includes a Vercel WSGI entrypoint, WhiteNoise static-file
+handling, and a production PostgreSQL configuration. SQLite is intentionally
+used only for local development because Vercel's filesystem is ephemeral.
 
-1. **Environment variables** — don't ship the dev `SECRET_KEY` or `DEBUG=True`.
-   In `basketbee/settings.py`, switch to reading from the environment, e.g.:
-   ```python
-   import os
-   SECRET_KEY = os.environ["SECRET_KEY"]
-   DEBUG = os.environ.get("DEBUG", "False") == "True"
-   ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
-   ```
-2. **Static files** — `whitenoise` is already in `requirements.txt`. Add it to
-   `MIDDLEWARE` (just below `SecurityMiddleware`) and run:
+1. Create a GitHub repository, then push this project:
    ```bash
-   python manage.py collectstatic
+   git add .
+   git commit -m "Prepare BasketBee for Vercel"
+   git branch -M main
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
+   git push -u origin main
    ```
-3. **Database** — SQLite works for a demo; for real traffic, switch
-   `DATABASES` to Postgres (most hosts provide a `DATABASE_URL`; the
-   `dj-database-url` package makes this a one-liner).
-4. **Media uploads** (product photos) — on most PaaS hosts the filesystem
-   isn't persistent, so point `MEDIA_ROOT`/`MEDIA_URL` at S3 or another
-   object store for production (e.g. via `django-storages`). Fine to leave
-   as local disk for a quick demo.
-5. **Run with a real server**, not `runserver`:
+2. In Vercel, choose **Add New Project**, import the GitHub repository, and
+   deploy with the detected Python settings.
+3. Add these Vercel environment variables for **Production**, **Preview**, and
+   **Development** as appropriate:
+   - `SECRET_KEY`: a long random value
+   - `DATABASE_URL`: a hosted PostgreSQL connection string from Neon, Supabase,
+     or another PostgreSQL provider
+   - `ALLOWED_HOSTS`: your custom domain, if you use one
+   - `CSRF_TRUSTED_ORIGINS`: your HTTPS custom domain, if you use one
+4. Redeploy. Vercel runs `python manage.py collectstatic --noinput` during the
+   build, and `basketbee/wsgi.py` serves the Django application.
+5. Run migrations against the hosted database from a local shell using the
+   same `DATABASE_URL`, then create the owner account:
    ```bash
-   gunicorn basketbee.wsgi:application
+   python manage.py migrate
+   python manage.py createsuperuser
    ```
-6. Create your production shop-owner account with
-   `python manage.py createsuperuser` once, after the first deploy.
+
+Product images uploaded through the dashboard need object storage in production
+because files written to Vercel are not persistent. Use S3-compatible storage
+before relying on uploaded images in the live store.
 
 ## Notes
 

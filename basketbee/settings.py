@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,13 +24,27 @@ load_dotenv(BASE_DIR / '.env')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!x_6f7612va(=hk&u3w28gdnemxd0#x46op%rcj=%wz&0klzpn'
+IS_VERCEL = os.getenv('VERCEL') == '1'
+SECRET_KEY = os.getenv('SECRET_KEY') or (
+    '' if IS_VERCEL else 'local-development-only-insecure-key'
+)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False' if IS_VERCEL else 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver", "0.0.0.0"]
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv(
+        'ALLOWED_HOSTS',
+        'localhost,127.0.0.1,testserver,0.0.0.0',
+    ).split(',')
+    if host.strip()
+]
+if IS_VERCEL:
+    ALLOWED_HOSTS.extend(['.vercel.app', os.getenv('VERCEL_URL', '')])
+    ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
+
+if IS_VERCEL and not SECRET_KEY:
+    raise ImproperlyConfigured('Set SECRET_KEY in the Vercel project environment.')
 
 
 # Application definition
@@ -45,6 +61,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -77,14 +94,27 @@ WSGI_APPLICATION = 'basketbee.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        # Keep local/dev databases selectable so an older database from a
-        # different BasketBee version cannot silently break the current schema.
-        'NAME': os.environ.get('BASKETBEE_DB_PATH', BASE_DIR / 'basketbee-local.sqlite3'),
+DATABASE_URL = os.getenv('DATABASE_URL')
+if IS_VERCEL and not DATABASE_URL:
+    raise ImproperlyConfigured('Set DATABASE_URL to a persistent PostgreSQL database.')
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=0 if IS_VERCEL else 600,
+            ssl_require=IS_VERCEL,
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            # Keep local/dev databases selectable so an older database from a
+            # different BasketBee version cannot silently break the current schema.
+            'NAME': os.environ.get('BASKETBEE_DB_PATH', BASE_DIR / 'basketbee-local.sqlite3'),
+        }
+    }
 
 
 # Password validation
@@ -124,6 +154,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static', BASE_DIR / 'store' / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -138,11 +169,33 @@ LOGOUT_REDIRECT_URL = 'store:home'
 RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
 
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
+    if origin.strip()
+]
+if IS_VERCEL:
+    CSRF_TRUSTED_ORIGINS.extend([
+        'https://*.vercel.app',
+        f"https://{os.getenv('VERCEL_URL')}" if os.getenv('VERCEL_URL') else '',
+    ])
+    CSRF_TRUSTED_ORIGINS = [origin for origin in CSRF_TRUSTED_ORIGINS if origin]
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SESSION_COOKIE_SECURE = not DEBUG
+    CSRF_COOKIE_SECURE = not DEBUG
+
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
 MAILERS = {
     'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        'BACKEND': os.getenv(
+            'EMAIL_BACKEND',
+            'django.core.mail.backends.smtp.EmailBackend'
+            if IS_VERCEL
+            else 'django.core.mail.backends.console.EmailBackend',
+        ),
     },
 }
