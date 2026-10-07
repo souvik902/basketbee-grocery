@@ -24,11 +24,13 @@ load_dotenv(BASE_DIR / '.env')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
+# SECURITY WARNING: keep the secret key used in production secret!
 IS_VERCEL = os.getenv('VERCEL') == '1'
 SECRET_KEY = os.getenv('SECRET_KEY') or (
     '' if IS_VERCEL else 'local-development-only-insecure-key'
 )
 
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False' if IS_VERCEL else 'True').lower() == 'true'
 
 ALLOWED_HOSTS = [
@@ -46,6 +48,27 @@ if IS_VERCEL:
 if IS_VERCEL and not SECRET_KEY:
     raise ImproperlyConfigured('Set SECRET_KEY in the Vercel project environment.')
 
+CLOUDINARY_ENV_VARS = {
+    'CLOUDINARY_CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'CLOUDINARY_API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+    'CLOUDINARY_API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+}
+if IS_VERCEL:
+    missing_cloudinary_vars = [
+        name for name, value in CLOUDINARY_ENV_VARS.items() if not value
+    ]
+    if missing_cloudinary_vars:
+        raise ImproperlyConfigured(
+            'Set ' + ', '.join(missing_cloudinary_vars)
+            + ' in the Vercel project environment.'
+        )
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': CLOUDINARY_ENV_VARS['CLOUDINARY_CLOUD_NAME'],
+    'API_KEY': CLOUDINARY_ENV_VARS['CLOUDINARY_API_KEY'],
+    'API_SECRET': CLOUDINARY_ENV_VARS['CLOUDINARY_API_SECRET'],
+}
+
 
 # Application definition
 
@@ -58,6 +81,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'store',
 ]
+if IS_VERCEL:
+    INSTALLED_APPS.extend(['cloudinary_storage', 'cloudinary'])
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -94,7 +119,7 @@ WSGI_APPLICATION = 'basketbee.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv('DATABASE_URL') if IS_VERCEL else None
 if IS_VERCEL and not DATABASE_URL:
     raise ImproperlyConfigured('Set DATABASE_URL to a persistent PostgreSQL database.')
 
@@ -102,8 +127,8 @@ if DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.parse(
             DATABASE_URL,
-            conn_max_age=0 if IS_VERCEL else 600,
-            ssl_require=IS_VERCEL,
+            conn_max_age=0,
+            ssl_require=True,
         )
     }
 else:
@@ -155,6 +180,15 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static', BASE_DIR / 'store' / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+if IS_VERCEL:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -191,11 +225,6 @@ if IS_VERCEL:
 
 MAILERS = {
     'default': {
-        'BACKEND': os.getenv(
-            'EMAIL_BACKEND',
-            'django.core.mail.backends.smtp.EmailBackend'
-            if IS_VERCEL
-            else 'django.core.mail.backends.console.EmailBackend',
-        ),
+        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }

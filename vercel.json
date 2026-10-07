@@ -4,6 +4,5 @@
     "basketbee/wsgi.py": {
       "maxDuration": 60
     }
-  },
-  "buildCommand": "VERCEL=0 python manage.py collectstatic --noinput"
+  }
 }

@@ -6,13 +6,8 @@ from .models import (
     ProductImage,
     Category,
     CustomerProfile,
-    Address,
     Coupon,
     Order,
-    OrderItem,
-    Review,
-    GroceryPlan,
-    GroceryPlanItem,
 )
 
 
@@ -107,25 +102,6 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 # =========================================
-# ORDER ITEMS
-# =========================================
-
-class OrderItemInline(admin.TabularInline):
-
-    model = OrderItem
-
-    extra = 0
-
-    readonly_fields = (
-        "product",
-        "quantity",
-        "price",
-    )
-
-    can_delete = False
-
-
-# =========================================
 # ORDER ADMIN
 # =========================================
 
@@ -157,10 +133,6 @@ class OrderAdmin(admin.ModelAdmin):
         "created_at",
     )
 
-    inlines = [
-        OrderItemInline
-    ]
-
 
 # =========================================
 # OTHER MODELS
@@ -169,10 +141,5 @@ class OrderAdmin(admin.ModelAdmin):
 admin.site.register([
     Category,
     CustomerProfile,
-    Address,
     Coupon,
-    OrderItem,
-    Review,
-    GroceryPlan,
-    GroceryPlanItem,
 ])

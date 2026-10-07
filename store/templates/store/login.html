@@ -1,23 +1,72 @@
 {% extends "store/base.html" %}
-{% block title %}Admin login — BasketBee{% endblock %}
-{% block content %}
-<section class="section" style="max-width:420px;">
-  <div class="form-card">
-    <h1>Admin login</h1>
-    <p class="subtitle">Sign in to add products, manage stock and view orders.</p>
 
-    <form method="post">
-      {% csrf_token %}
-      {% for field in form %}
-        <div class="field">
-          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+{% block title %}Login — BasketBee{% endblock %}
+
+{% block content %}
+
+<div class="login-page">
+
+    <div class="l
+    ogin-modal">
+
+        <!-- Back -->
+        <a href="/" class="login-back">←</a>
+
+        <!-- BasketBee Logo -->
+        <div class="login-logo">
+            BasketBee
         </div>
-      {% endfor %}
-      {% if form.non_field_errors %}<ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-      <button type="submit" class="btn btn--primary">Sign in</button>
-    </form>
-  </div>
-</section>
+
+        <!-- Heading -->
+        <h1>India's last minute app</h1>
+
+        <p class="login-subtitle">
+            Log in or Sign up
+        </p>
+
+        <!-- Login Form -->
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+                <div class="login-field">
+
+                    {{ field }}
+
+                    {% if field.errors %}
+                        <ul class="errorlist">
+                            {% for error in field.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+                <ul class="errorlist">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <button type="submit" class="login-continue">
+                Continue
+            </button>
+        </form>
+
+        <!-- Terms -->
+        <div class="login-terms">
+            By continuing, you agree to our
+            <a href="#">Terms of service</a>
+            &
+            <a href="#">Privacy policy</a>
+        </div>
+
+    </div>
+
+</div>
+
 {% endblock %}

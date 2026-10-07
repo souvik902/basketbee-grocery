@@ -9,11 +9,22 @@ class MobileLoginForm(forms.Form):
         max_length=15,
         label='Mobile number',
         validators=[RegexValidator(r'^\+?[0-9]{10,15}$', 'Enter a valid mobile number.')],
-        widget=forms.TextInput(attrs={'inputmode': 'tel', 'autocomplete': 'tel', 'placeholder': '+91 9876543210'}),
+        widget=forms.TextInput(attrs={
+            'inputmode': 'tel',
+            'autocomplete': 'tel',
+            'placeholder': 'Enter number'
+        })
     )
 
     def clean_phone(self):
-        return self.cleaned_data['phone'].replace(' ', '').replace('-', '')
+        phone = self.cleaned_data['phone'].replace(' ', '').replace('-', '')
+        if phone.startswith('+91'):
+            phone = phone[3:]
+        elif phone.startswith('91') and len(phone) == 12:
+            phone = phone[2:]
+        if len(phone) != 10:
+            raise forms.ValidationError('Enter a 10-digit Indian mobile number.')
+        return phone
 
 class OTPVerificationForm(forms.Form):
     otp = forms.CharField(

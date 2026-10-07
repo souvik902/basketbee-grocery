@@ -235,10 +235,26 @@ def user_login(request):
     if request.user.is_authenticated:
         return redirect("home")
 
+    if request.GET.get("change") == "number":
+        for key in (
+            "login_phone",
+            "login_otp",
+            "login_demo_otp",
+            "login_otp_sent_at",
+            "login_otp_attempts",
+            "login_location",
+        ):
+            request.session.pop(key, None)
+        return redirect("login")
+
     phone_form = MobileLoginForm(request.POST or None)
-    otp_form = OTPVerificationForm(request.POST or None)
+    otp_form = OTPVerificationForm(
+        request.POST
+        if request.method == "POST" and request.POST.get("action") == "verify_otp"
+        else None
+    )
     otp_sent = bool(request.session.get("login_phone"))
-    demo_otp = None
+    demo_otp = request.session.get("login_demo_otp")
 
     if (
         request.method == "POST"
@@ -247,14 +263,18 @@ def user_login(request):
     ):
         phone = phone_form.cleaned_data["phone"]
         otp = str(secrets.randbelow(900000) + 100000)
-
         request.session["login_phone"] = phone
         request.session["login_otp"] = make_password(otp)
+        request.session["login_demo_otp"] = otp
         request.session["login_otp_sent_at"] = timezone.now().timestamp()
+        request.session["login_otp_attempts"] = 0
+        request.session["login_location"] = {
+            "latitude": request.POST.get("latitude", ""),
+            "longitude": request.POST.get("longitude", ""),
+        }
         otp_sent = True
-        demo_otp = otp if settings.DEBUG else None
-
-        messages.success(request, "Verification code sent to your mobile number.")
+        demo_otp = otp
+        messages.success(request, "Your demo verification code is ready.")
 
     elif (
         request.method == "POST"
@@ -262,59 +282,88 @@ def user_login(request):
     ):
         phone = request.session.get("login_phone")
         sent_at = request.session.get("login_otp_sent_at", 0)
+        attempts = request.session.get("login_otp_attempts", 0)
 
         if not phone or timezone.now().timestamp() - sent_at > 300:
             request.session.pop("login_phone", None)
-            request.session.pop("login_otp", None)
             request.session.pop("login_otp_sent_at", None)
+            request.session.pop("login_otp", None)
+            request.session.pop("login_demo_otp", None)
+            request.session.pop("login_otp_attempts", None)
+            request.session.pop("login_location", None)
             messages.error(request, "This verification code expired. Request a new one.")
             otp_sent = False
 
-        elif (
-            otp_form.is_valid()
-            and check_password(
+        elif attempts >= 5:
+            for key in (
+                "login_phone",
+                "login_otp",
+                "login_demo_otp",
+                "login_otp_sent_at",
+                "login_otp_attempts",
+                "login_location",
+            ):
+                request.session.pop(key, None)
+            messages.error(request, "Too many incorrect attempts. Request a new OTP.")
+            otp_sent = False
+
+        elif otp_form.is_valid():
+            is_valid_otp = check_password(
                 otp_form.cleaned_data["otp"],
                 request.session.get("login_otp", ""),
             )
-        ):
-            profile = (
-                CustomerProfile.objects
-                .select_related("user")
-                .filter(phone=phone)
-                .first()
-            )
 
-            if profile:
-                user = profile.user
+            if is_valid_otp:
+                profile = (
+                    CustomerProfile.objects
+                    .select_related("user")
+                    .filter(phone=phone)
+                    .first()
+                )
+
+                if profile:
+                    user = profile.user
+                else:
+                    user, _ = User.objects.get_or_create(
+                        username=f"user_{phone[-10:]}"
+                    )
+                    CustomerProfile.objects.get_or_create(
+                        user=user,
+                        defaults={"phone": phone},
+                    )
+
+                login(request, user)
+
+                request.session["delivery_location"] = request.session.get(
+                    "login_location",
+                    {"latitude": "", "longitude": ""},
+                )
+
+                for key in (
+                    "login_phone",
+                    "login_otp_sent_at",
+                    "login_otp",
+                    "login_demo_otp",
+                    "login_otp_attempts",
+                    "login_location",
+                ):
+                    request.session.pop(key, None)
+
+                return redirect(request.GET.get("next", "home"))
+
             else:
-                user, _ = User.objects.get_or_create(
-                    username=f"user_{phone[-10:]}"
-                )
-                CustomerProfile.objects.get_or_create(
-                    user=user,
-                    defaults={"phone": phone},
-                )
-
-            login(request, user)
-
-            request.session["delivery_location"] = {
-                "latitude": otp_form.cleaned_data.get("latitude", ""),
-                "longitude": otp_form.cleaned_data.get("longitude", ""),
-            }
-
-            for key in ("login_phone", "login_otp", "login_otp_sent_at"):
-                request.session.pop(key, None)
-
-            return redirect(request.GET.get("next", "home"))
+                request.session["login_otp_attempts"] = attempts + 1
+                messages.error(request, "That verification code is incorrect.")
 
         else:
-            messages.error(request, "That verification code is incorrect.")
+            messages.error(request, "Enter the 6-digit verification code.")
 
     return render(request, "login.html", {
         "phone_form": phone_form,
         "otp_form": otp_form,
         "otp_sent": otp_sent,
         "demo_otp": demo_otp,
+        "login_phone": request.session.get("login_phone", ""),
     })
 
 
@@ -417,12 +466,13 @@ def checkout(request):
         return redirect("cart")
 
     coupon_discount = Decimal("0")
-    code = request.POST.get("coupon", "").strip().upper() if request.method == "POST" else ""
+    code = request.POST.get("coupon", "").strip() if request.method == "POST" else ""
 
     if code:
-        coupon = Coupon.objects.filter(code=code).first()
+        coupon = Coupon.objects.filter(code__iexact=code).first()
         if coupon and coupon.valid_for(subtotal):
             coupon_discount = coupon.discount(subtotal)
+            code = coupon.code
         else:
             messages.error(request, "That coupon is invalid or not eligible.")
 
@@ -496,10 +546,10 @@ def _calculate_checkout_total(request, coupon_code=""):
         return lines, subtotal, saved, delivery, Decimal("0"), Decimal("0")
 
     coupon_discount = Decimal("0")
-    coupon_code = (coupon_code or "").strip().upper()
+    coupon_code = (coupon_code or "").strip()
 
     if coupon_code:
-        coupon = Coupon.objects.filter(code=coupon_code).first()
+        coupon = Coupon.objects.filter(code__iexact=coupon_code).first()
         if coupon and coupon.valid_for(subtotal):
             coupon_discount = coupon.discount(subtotal)
 
@@ -515,7 +565,7 @@ def _calculate_checkout_total(request, coupon_code=""):
 @require_POST
 def create_payment(request):
     address_id = request.POST.get("address", "").strip()
-    coupon_code = request.POST.get("coupon", "").strip().upper()
+    coupon_code = request.POST.get("coupon", "").strip()
     requested_method = request.POST.get("payment_method", "upi").strip().lower()
 
     if requested_method not in {"upi", "card"}:
@@ -823,7 +873,7 @@ def verify_payment(request):
 @require_POST
 def create_qr_payment(request):
     address_id = request.POST.get("address", "").strip()
-    coupon_code = request.POST.get("coupon", "").strip().upper()
+    coupon_code = request.POST.get("coupon", "").strip()
 
     if not address_id:
         return JsonResponse({
@@ -907,12 +957,39 @@ def create_qr_payment(request):
         )
 
         if response.status_code not in (200, 201):
-            print("RAZORPAY QR CREATE ERROR:", response.status_code, response.text)
+            try:
+                error_response = response.json()
+            except requests.exceptions.JSONDecodeError:
+                error_response = {}
+
+            error_details = (
+                error_response.get("error", {})
+                if isinstance(error_response, dict)
+                else {}
+            )
+            if not isinstance(error_details, dict):
+                error_details = {}
+
+            error_code = str(error_details.get("code") or "")
+            error_message = str(error_details.get("description") or "").strip()
+            if not error_message:
+                error_message = (
+                    "Razorpay rejected the QR request. Check the server log "
+                    "for the HTTP status and error code."
+                )
+
+            print(
+                "RAZORPAY QR CREATE ERROR:",
+                response.status_code,
+                error_code or "unknown error code",
+                error_message,
+            )
             order.delete()
             return JsonResponse({
                 "success": False,
-                "message": "Could not create UPI QR. Please check your Razorpay QR API access.",
-            }, status=500)
+                "message": error_message,
+                "error_code": error_code or None,
+            }, status=502)
 
         qr = response.json()
         qr_id = qr.get("id")

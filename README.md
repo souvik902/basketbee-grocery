@@ -78,41 +78,41 @@ is live. Once deployed, they:
 They can also add new categories, edit prices/stock, or remove a product, all
 from the same dashboard, at any time, from any device.
 
-## 3. Deploying with GitHub and Vercel
+## 3. Deploying with GitHub, Vercel, Neon, and Cloudinary
 
-The repository includes a Vercel WSGI entrypoint, WhiteNoise static-file
-handling, and a production PostgreSQL configuration. SQLite is intentionally
-used only for local development because Vercel's filesystem is ephemeral.
+The project is configured for Vercel's Django runtime. Vercel serves collected
+static files from its CDN, Neon stores PostgreSQL data, and Cloudinary stores
+product photos and future admin uploads. Keep all credentials in Vercel's
+Production environment variables; never commit them to Git.
 
-1. Create a GitHub repository, then push this project:
-   ```bash
-   git add .
-   git commit -m "Prepare BasketBee for Vercel"
-   git branch -M main
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
-   git push -u origin main
-   ```
-2. In Vercel, choose **Add New Project**, import the GitHub repository, and
-   deploy with the detected Python settings.
-3. Add these Vercel environment variables for **Production**, **Preview**, and
-   **Development** as appropriate:
-   - `SECRET_KEY`: a long random value
-   - `DATABASE_URL`: a hosted PostgreSQL connection string from Neon, Supabase,
-     or another PostgreSQL provider
-   - `ALLOWED_HOSTS`: your custom domain, if you use one
-   - `CSRF_TRUSTED_ORIGINS`: your HTTPS custom domain, if you use one
-4. Redeploy. Vercel runs `python manage.py collectstatic --noinput` during the
-   build, and `basketbee/wsgi.py` serves the Django application.
-5. Run migrations against the hosted database from a local shell using the
-   same `DATABASE_URL`, then create the owner account:
-   ```bash
-   python manage.py migrate
-   python manage.py createsuperuser
-   ```
+Configure these variables in the Vercel project before deploying:
 
-Product images uploaded through the dashboard need object storage in production
-because files written to Vercel are not persistent. Use S3-compatible storage
-before relying on uploaded images in the live store.
+- `SECRET_KEY`: a long, unique random Django secret
+- `DATABASE_URL`: the pooled Neon connection string for `basketbee_vercel`
+- `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`: the existing payment credentials
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
+  `CLOUDINARY_API_SECRET`: the Cloudinary account credentials
+
+The existing database and admin account are migrated separately; do not run
+`createsuperuser` or seed demo data on the production database.
+
+Before the first production deployment, upload the existing files under
+`media/` to Cloudinary, preserving their relative paths. New product images
+uploaded through the dashboard will then be stored in Cloudinary automatically.
+
+Vercel detects `manage.py`, uses `basketbee/wsgi.py`, and collects static files
+during its build. The `.env` file is for local development only and must not be
+committed.
+
+### Demo phone OTP login
+
+The login flow generates a six-digit demo OTP after a valid mobile number is
+entered. The code is displayed on the login page; entering it signs in an
+existing customer or creates a customer account for that phone number. This is
+for demo/testing only and does not send an SMS.
+
+The code expires after five minutes and is limited to five verification
+attempts.
 
 ## Notes
 
