@@ -58,6 +58,28 @@ class PhoneLoginTests(TestCase):
 		self.assertContains(response, 'class="auth-feedback"')
 
 class CouponCheckoutTests(TestCase):
+	def test_checkout_does_not_show_admin_login_to_customer(self):
+		user = User.objects.create_user(username="checkout-buyer")
+		category = Category.objects.create(name="Checkout navigation test")
+		product = Product.objects.create(
+			name="Checkout groceries",
+			category=category,
+			description="",
+			price=Decimal("200.00"),
+			brand="BasketBee",
+			unit="pack",
+			stock=3,
+		)
+		self.client.force_login(user)
+		session = self.client.session
+		session["cart"] = {str(product.pk): 1}
+		session.save()
+
+		response = self.client.get(reverse("checkout"))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertNotContains(response, "Admin login")
+
 	def test_checkout_applies_lowercase_admin_coupon(self):
 		user = User.objects.create_user(username="coupon-buyer", password="test-pass")
 		category = Category.objects.create(name="Coupon test")
