@@ -686,7 +686,6 @@ footer p{
     border-radius: 18px;
     overflow: hidden;
     position: relative;
-    cursor: crosshair;
 }
 
 .main-image-box img {
@@ -695,14 +694,7 @@ footer p{
     object-fit: contain;
     padding: 5px;
 
-    /* Product image বড় করবে */
-    transform: scale(1.35);
-
-    transition: transform 0.4s ease, opacity 0.2s ease;
-}
-
-.main-image-box:hover img {
-    transform: scale(1.45);
+    transition: opacity 0.2s ease;
 }
 /* =====================================================
    PRODUCT DETAIL PAGE
@@ -753,8 +745,6 @@ footer p{
     border: 1px solid #e2e9df;
 
     position: relative;
-
-    cursor: crosshair;
 }
 
 
@@ -766,18 +756,8 @@ footer p{
 
     padding: 5px;
 
-    transform: scale(1.30);
-
     transition:
-        transform 0.35s ease,
         opacity 0.25s ease;
-}
-
-
-/* Mouse over image */
-
-.gallery-main:hover img {
-    transform: scale(1.40);
 }
 
 
@@ -1056,16 +1036,6 @@ footer p{
     }
 
 
-    .gallery-main img {
-        transform: scale(1.15);
-    }
-
-
-    .gallery-main:hover img {
-        transform: scale(1.20);
-    }
-
-
     .thumbnail {
         width: 70px;
         height: 70px;
@@ -1124,7 +1094,6 @@ footer p{
 
     position: relative;
 
-    cursor: zoom-in;
 }
 
 
@@ -1135,10 +1104,6 @@ footer p{
     height: 80%;
 
     object-fit: contain;
-
-    transition:
-        transform 0.25s ease,
-        transform-origin 0.1s ease;
 
     user-select: none;
 }

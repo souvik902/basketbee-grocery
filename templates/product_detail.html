@@ -8,7 +8,7 @@
     <div class="product-gallery">
 
         <!-- Main Image -->
-        <div class="main-product-image" id="zoomContainer">
+        <div class="main-product-image">
 
             {% if product.image %}
                 <img
@@ -21,9 +21,6 @@
                     {{ product.category.icon }}
                 </div>
             {% endif %}
-
-            <!-- Zoom Lens -->
-            <div class="zoom-lens" id="zoomLens"></div>
         </div>
 
 
@@ -253,56 +250,6 @@ function changeProductImage(imageUrl, thumbnail) {
     thumbnail.classList.add("active");
 }
 
-
-/* =========================
-   MOUSE HOVER ZOOM
-========================= */
-
-const zoomContainer =
-    document.getElementById("zoomContainer");
-
-const mainImage =
-    document.getElementById("mainProductImage");
-
-if (zoomContainer && mainImage) {
-
-    zoomContainer.addEventListener(
-        "mousemove",
-        function(event) {
-
-            const rect =
-                zoomContainer.getBoundingClientRect();
-
-            const x =
-                ((event.clientX - rect.left) / rect.width) * 100;
-
-            const y =
-                ((event.clientY - rect.top) / rect.height) * 100;
-
-            mainImage.style.transformOrigin =
-                `${x}% ${y}%`;
-
-            mainImage.style.transform =
-                "scale(2.2)";
-
-        }
-    );
-
-
-    zoomContainer.addEventListener(
-        "mouseleave",
-        function() {
-
-            mainImage.style.transform =
-                "scale(1)";
-
-            mainImage.style.transformOrigin =
-                "center center";
-
-        }
-    );
-
-}
 
 </script>
 
