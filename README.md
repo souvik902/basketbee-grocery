@@ -78,11 +78,11 @@ is live. Once deployed, they:
 They can also add new categories, edit prices/stock, or remove a product, all
 from the same dashboard, at any time, from any device.
 
-## 3. Deploying with GitHub, Vercel, Neon, and Cloudinary
+## 3. Deploying with GitHub, Vercel, and Neon
 
 The project is configured for Vercel's Django runtime. Vercel serves collected
-static files from its CDN, Neon stores PostgreSQL data, and Cloudinary stores
-product photos and future admin uploads. Keep all credentials in Vercel's
+static files from its CDN, Neon stores PostgreSQL data, and the existing product
+photos are bundled with the deployment. Keep all credentials in Vercel's
 Production environment variables; never commit them to Git.
 
 Configure these variables in the Vercel project before deploying:
@@ -90,15 +90,13 @@ Configure these variables in the Vercel project before deploying:
 - `SECRET_KEY`: a long, unique random Django secret
 - `DATABASE_URL`: the pooled Neon connection string for `basketbee_vercel`
 - `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`: the existing payment credentials
-- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
-  `CLOUDINARY_API_SECRET`: the Cloudinary account credentials
 
 The existing database and admin account are migrated separately; do not run
 `createsuperuser` or seed demo data on the production database.
 
-Before the first production deployment, upload the existing files under
-`media/` to Cloudinary, preserving their relative paths. New product images
-uploaded through the dashboard will then be stored in Cloudinary automatically.
+The existing media files are included under `public/media` and served at their
+existing `/media/...` URLs. Vercel's filesystem is read-only/ephemeral, so new
+photo uploads made after deployment will not persist.
 
 Vercel detects `manage.py`, uses `basketbee/wsgi.py`, and collects static files
 during its build. The `.env` file is for local development only and must not be

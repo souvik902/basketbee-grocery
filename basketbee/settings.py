@@ -48,27 +48,6 @@ if IS_VERCEL:
 if IS_VERCEL and not SECRET_KEY:
     raise ImproperlyConfigured('Set SECRET_KEY in the Vercel project environment.')
 
-CLOUDINARY_ENV_VARS = {
-    'CLOUDINARY_CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-    'CLOUDINARY_API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-    'CLOUDINARY_API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
-}
-if IS_VERCEL:
-    missing_cloudinary_vars = [
-        name for name, value in CLOUDINARY_ENV_VARS.items() if not value
-    ]
-    if missing_cloudinary_vars:
-        raise ImproperlyConfigured(
-            'Set ' + ', '.join(missing_cloudinary_vars)
-            + ' in the Vercel project environment.'
-        )
-
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': CLOUDINARY_ENV_VARS['CLOUDINARY_CLOUD_NAME'],
-    'API_KEY': CLOUDINARY_ENV_VARS['CLOUDINARY_API_KEY'],
-    'API_SECRET': CLOUDINARY_ENV_VARS['CLOUDINARY_API_SECRET'],
-}
-
 
 # Application definition
 
@@ -81,8 +60,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'store',
 ]
-if IS_VERCEL:
-    INSTALLED_APPS.extend(['cloudinary_storage', 'cloudinary'])
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -180,18 +157,9 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static', BASE_DIR / 'store' / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-if IS_VERCEL:
-    STORAGES = {
-        'default': {
-            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
-        },
-        'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
-        },
-    }
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = BASE_DIR / 'public' / 'media' if IS_VERCEL else BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
