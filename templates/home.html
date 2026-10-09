@@ -1,66 +1,39 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
 <div class="home-page">
     <section class="promo-carousel" data-carousel aria-label="BasketBee grocery offers">
         <div class="promo-track">
-            <article class="promo-slide promo-slide-produce is-active" aria-roledescription="slide" aria-label="1 of 4">
+            {% for slide in promo_slides %}
+            <article class="promo-slide{% if forloop.first %} is-active{% endif %}" aria-roledescription="slide" aria-label="{{ forloop.counter }} of {{ promo_slides|length }}" aria-hidden="{{ forloop.counter0|yesno:'true,false' }}">
+                <img class="promo-image {{ slide.image_class }}" src="{{ media_prefix }}{{ slide.image }}" alt="{{ slide.alt }}" {% if forloop.first %}fetchpriority="high"{% else %}loading="eager"{% endif %}>
                 <div class="promo-copy">
-                    <span class="promo-kicker"><span aria-hidden="true">✳</span> Fresh from the market</span>
-                    <h1>Good days start<br>with <em>fresh choices.</em></h1>
-                    <p>Colourful fruits, crisp vegetables and everyday goodness, picked for your table.</p>
-                    <a class="promo-button" href="{% url 'products' %}">Shop fresh picks <span aria-hidden="true">→</span></a>
-                    <span class="promo-note">Fresh finds, delivered with care</span>
+                    <span class="promo-kicker"><span aria-hidden="true">✳</span> {{ slide.kicker }}</span>
+                    {% if forloop.first %}
+                        <h1>{{ slide.title_before }}<br><em>{{ slide.title_after }}</em></h1>
+                    {% else %}
+                        <h2>{{ slide.title_before }}<br><em>{{ slide.title_after }}</em></h2>
+                    {% endif %}
+                    <p>{{ slide.description }}</p>
+                    <a class="promo-button" href="{% url 'products' %}">{{ slide.action }} <span aria-hidden="true">→</span></a>
+                    <span class="promo-note">{{ slide.note }}</span>
                 </div>
-                <span class="promo-stamp" aria-hidden="true">FRESH<br>FEELS<br>GOOD</span>
             </article>
-
-            <article class="promo-slide promo-slide-pantry" aria-roledescription="slide" aria-label="2 of 4" aria-hidden="true">
-                <div class="promo-copy">
-                    <span class="promo-kicker"><span aria-hidden="true">✳</span> Little things, big comfort</span>
-                    <h2>Pantry favourites<br>for <em>everyday joy.</em></h2>
-                    <p>Stock up on the staples you love, from breakfast to dinner and everything between.</p>
-                    <a class="promo-button" href="{% url 'products' %}">Explore the pantry <span aria-hidden="true">→</span></a>
-                    <span class="promo-note">Your everyday list, made easy</span>
-                </div>
-                <span class="promo-stamp" aria-hidden="true">GOOD<br>FOOD<br>MOOD</span>
-            </article>
-
-            <article class="promo-slide promo-slide-greens" aria-roledescription="slide" aria-label="3 of 4" aria-hidden="true">
-                <div class="promo-copy">
-                    <span class="promo-kicker"><span aria-hidden="true">✳</span> A little greener every day</span>
-                    <h2>Make room for<br><em>something fresh.</em></h2>
-                    <p>Bring home vibrant greens and feel-good ingredients for meals worth slowing down for.</p>
-                    <a class="promo-button" href="{% url 'products' %}">Find your fresh <span aria-hidden="true">→</span></a>
-                    <span class="promo-note">Lovely ingredients, lovely meals</span>
-                </div>
-                <span class="promo-stamp" aria-hidden="true">GROWN<br>WITH<br>CARE</span>
-            </article>
-
-            <article class="promo-slide promo-slide-market" aria-roledescription="slide" aria-label="4 of 4" aria-hidden="true">
-                <div class="promo-copy">
-                    <span class="promo-kicker"><span aria-hidden="true">✳</span> Your neighbourhood grocery shop</span>
-                    <h2>Everything you need,<br><em>right on time.</em></h2>
-                    <p>From last-minute essentials to weekly favourites, your basket is in good hands.</p>
-                    <a class="promo-button" href="{% url 'products' %}">Build your basket <span aria-hidden="true">→</span></a>
-                    <span class="promo-note">Thoughtful groceries for everyday life</span>
-                </div>
-                <span class="promo-stamp" aria-hidden="true">HELLO<br>GOOD<br>GROCERIES</span>
-            </article>
+            {% endfor %}
         </div>
 
         <div class="promo-controls">
             <div class="promo-dots" aria-label="Choose a banner">
-                <button class="promo-dot is-active" type="button" aria-label="Show banner 1" aria-current="true"></button>
-                <button class="promo-dot" type="button" aria-label="Show banner 2"></button>
-                <button class="promo-dot" type="button" aria-label="Show banner 3"></button>
-                <button class="promo-dot" type="button" aria-label="Show banner 4"></button>
+                {% for slide in promo_slides %}
+                    <button class="promo-dot{% if forloop.first %} is-active{% endif %}" type="button" aria-label="Show banner {{ forloop.counter }}"{% if forloop.first %} aria-current="true"{% endif %}></button>
+                {% endfor %}
             </div>
             <div class="promo-arrows">
                 <button class="promo-arrow" type="button" data-carousel-prev aria-label="Previous banner">←</button>
                 <button class="promo-arrow" type="button" data-carousel-next aria-label="Next banner">→</button>
             </div>
         </div>
-        <span class="promo-count" aria-hidden="true"><strong data-slide-number>01</strong> <span>/ 04</span></span>
+        <span class="promo-count" aria-hidden="true"><strong data-slide-number>01</strong> <span>/ <span data-slide-total>{{ promo_slides|length|stringformat:"02d" }}</span></span></span>
     </section>
 
     <div class="home-promises" aria-label="BasketBee benefits">

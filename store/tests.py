@@ -10,6 +10,26 @@ from django.utils import timezone
 from .models import Address, Category, Coupon, CustomerProfile, Product
 
 
+class HomeCarouselTests(TestCase):
+	def test_home_carousel_has_distinct_grocery_images(self):
+		response = self.client.get(reverse("home"))
+
+		self.assertEqual(response.status_code, 200)
+		slides = response.context["promo_slides"]
+		images = [slide["image"] for slide in slides]
+
+		self.assertEqual(len(slides), 5)
+		self.assertEqual(len(images), len(set(images)))
+		self.assertEqual(set(images), {
+			"products/Apples-184940975-770x533-1_jpg.webp",
+			"products/Brown-eggs.webp",
+			"products/500-regular-ctc-assam-tea-with-elaichi-long-cinnamon-1-box-original-imahhmxaepbuvt9y.webp",
+			"products/7840058004055.webp",
+			"products/images5.jpg",
+		})
+		self.assertContains(response, 'data-slide-total>05</span>')
+
+
 class PhoneLoginTests(TestCase):
 	def test_login_uses_basketbee_phone_flow(self):
 		response = self.client.get(reverse("login"))

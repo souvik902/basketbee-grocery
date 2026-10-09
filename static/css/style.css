@@ -1198,47 +1198,72 @@ body {
     overflow: hidden;
     padding: clamp(28px, 5.8vw, 76px);
     color: white;
-    background-color: #315237;
-    background-position: center;
-    background-size: cover;
+    background: linear-gradient(120deg, #183e2d, #356846 72%, #71824c);
+    isolation: isolate;
+}
+
+.promo-image {
+    position: absolute;
+    z-index: 0;
+    top: 7%;
+    right: 4%;
+    width: 43%;
+    height: 86%;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .58);
+    border-radius: 24px;
+    object-fit: cover;
+    object-position: center;
+    box-shadow: 0 20px 48px rgba(9, 28, 16, .3);
+}
+
+.promo-image--produce {
+    object-position: center 48%;
+}
+
+.promo-image--eggs {
+    object-position: center;
+}
+
+.promo-image--tea {
+    object-position: center 55%;
+}
+
+.promo-image--potatoes {
+    object-position: center;
+}
+
+.promo-image--spice {
+    padding: 14px;
+    background: linear-gradient(145deg, #fffefa, #fff2cb);
+    object-fit: contain;
+}
+
+.promo-slide.is-active .promo-image {
+    animation: promoImageIn 7s ease both;
 }
 
 .promo-slide::before {
     position: absolute;
-    z-index: -1;
+    z-index: 1;
     inset: 0;
     content: "";
-    background: linear-gradient(90deg, rgba(17, 42, 25, .91) 0%, rgba(22, 48, 28, .77) 38%, rgba(19, 40, 22, .06) 100%);
+    background: linear-gradient(90deg, rgba(20, 54, 37, .98) 0%, rgba(26, 64, 43, .94) 39%, rgba(29, 67, 45, .66) 55%, rgba(29, 67, 45, .08) 76%);
 }
 
 .promo-slide::after {
     position: absolute;
-    z-index: -1;
+    z-index: 1;
     inset: 0;
     content: "";
     background: linear-gradient(0deg, rgba(13, 33, 20, .24), transparent 45%);
 }
 
-.promo-slide-produce {
-    background-image: url("https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1900&q=85");
-}
-
-.promo-slide-pantry {
-    background-image: url("https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&w=1900&q=85");
-}
-
-.promo-slide-greens {
-    background-image: url("https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1900&q=85");
-}
-
-.promo-slide-market {
-    background-image: url("https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1900&q=85");
-}
-
 .promo-copy {
     position: relative;
-    z-index: 1;
-    width: min(610px, 70%);
+    z-index: 2;
+    width: min(610px, 56%);
+    margin-top: -18px;
     animation: promoCopyIn .75s both;
 }
 
@@ -1278,7 +1303,7 @@ body {
 
 .promo-copy p {
     max-width: 450px;
-    margin: 18px 0 22px;
+    margin: 18px 0 14px;
     color: rgba(255, 255, 255, .86);
     font-size: clamp(14px, 1.4vw, 17px);
     line-height: 1.65;
@@ -1312,36 +1337,15 @@ body {
 
 .promo-note {
     display: block;
-    margin-top: 15px;
+    margin-top: 8px;
     color: rgba(255, 255, 255, .76);
     font-size: 12px;
     letter-spacing: .02em;
 }
 
-.promo-stamp {
-    position: absolute;
-    top: 15%;
-    right: 7%;
-    display: grid;
-    width: clamp(86px, 11vw, 142px);
-    aspect-ratio: 1;
-    place-content: center;
-    border: 1px solid rgba(255, 255, 255, .7);
-    border-radius: 50%;
-    background: rgba(255, 255, 255, .13);
-    color: #fff;
-    font-size: clamp(10px, 1.2vw, 14px);
-    font-weight: 800;
-    letter-spacing: .11em;
-    line-height: 1.45;
-    text-align: center;
-    transform: rotate(10deg);
-    backdrop-filter: blur(5px);
-}
-
 .promo-controls {
     position: absolute;
-    z-index: 2;
+    z-index: 3;
     right: clamp(20px, 4vw, 48px);
     bottom: 25px;
     left: clamp(20px, 4vw, 48px);
@@ -1394,11 +1398,17 @@ body {
 
 .promo-count {
     position: absolute;
-    right: clamp(22px, 4vw, 50px);
-    bottom: 78px;
-    color: rgba(255, 255, 255, .68);
+    z-index: 3;
+    top: 14%;
+    right: 7%;
+    padding: 8px 11px;
+    border: 1px solid rgba(255, 255, 255, .34);
+    border-radius: 999px;
+    background: rgba(18, 39, 24, .48);
+    color: #fff;
     font-size: 12px;
     letter-spacing: .08em;
+    backdrop-filter: blur(8px);
 }
 
 .promo-count strong {
@@ -1596,6 +1606,11 @@ body {
     to { opacity: 1; transform: translateX(0); }
 }
 
+@keyframes promoImageIn {
+    from { transform: scale(1.035); }
+    to { transform: scale(1); }
+}
+
 @media (max-width: 780px) {
     .home-page > section {
         margin-bottom: 34px;
@@ -1607,23 +1622,24 @@ body {
     }
 
     .promo-slide {
-        background-position: 62% center;
         padding: 30px;
     }
 
     .promo-slide::before {
-        background: linear-gradient(90deg, rgba(17, 42, 25, .91), rgba(22, 48, 28, .72) 65%, rgba(19, 40, 22, .23));
+        background: linear-gradient(90deg, rgba(20, 54, 37, .98), rgba(26, 64, 43, .94) 46%, rgba(29, 67, 45, .58) 68%, rgba(29, 67, 45, .08));
     }
 
     .promo-copy {
-        width: min(520px, 88%);
+        width: 66%;
+        margin-top: 0;
     }
 
-    .promo-stamp {
+    .promo-image {
         top: 10%;
-        right: 6%;
-        width: 76px;
-        font-size: 9px;
+        right: 3%;
+        width: 43%;
+        height: 80%;
+        border-radius: 19px;
     }
 
     .home-promises {
@@ -1661,16 +1677,37 @@ body {
 
     .promo-slide {
         align-items: flex-start;
-        background-position: 65% center;
         padding: 39px 23px 86px;
     }
 
     .promo-slide::before {
-        background: linear-gradient(90deg, rgba(17, 42, 25, .88), rgba(22, 48, 28, .67) 72%, rgba(19, 40, 22, .35));
+        background: linear-gradient(90deg, rgba(20, 54, 37, .92), rgba(26, 64, 43, .79) 63%, rgba(29, 67, 45, .5));
     }
 
     .promo-copy {
         width: 100%;
+        margin-top: 0;
+    }
+
+    .promo-image {
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        border-radius: 0;
+        opacity: .34;
+    }
+
+    .promo-image--spice {
+        top: auto;
+        right: 5%;
+        bottom: 86px;
+        width: 42%;
+        height: 46%;
+        border: 1px solid rgba(255, 255, 255, .7);
+        border-radius: 16px;
+        opacity: 1;
     }
 
     .promo-copy h1,
@@ -1689,14 +1726,6 @@ body {
         line-height: 1.5;
     }
 
-    .promo-stamp {
-        top: auto;
-        right: 18px;
-        bottom: 88px;
-        width: 63px;
-        font-size: 8px;
-    }
-
     .promo-controls {
         right: 20px;
         bottom: 19px;
@@ -1704,8 +1733,16 @@ body {
     }
 
     .promo-count {
-        right: 22px;
-        bottom: 67px;
+        top: 14px;
+        right: 16px;
+    }
+
+    .promo-image--spice + .promo-copy {
+        width: 62%;
+    }
+
+    .promo-image--spice + .promo-copy h1 {
+        font-size: clamp(32px, 8vw, 40px);
     }
 
     .home-promises {
